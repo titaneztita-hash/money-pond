@@ -1,2 +1,2 @@
 // วางลิงก์ Web app ของ Apps Script (ลงท้ายด้วย /exec) ไว้ระหว่างเครื่องหมายคำพูดด้านล่าง
-window.MONEY_POND_API = 'https://script.googleusercontent.com/macros/echo?user_content_key=AUkAhnTzDtB3CaLbQPGp60uJONUPxeeP06TKh_yxN3qmNAIBXeJqTC6n2b1R-Q77X7mlSz_y3MlfIknBeQ4cSuHbmtH25B1v-eN9_VEFFBJ1desCsmWP9QvnBrW_x0UEm1OECob6EHOfLoUsgbNyH93e4VifQbqx7oi7QCxbNMK4k23raCvZU66qfmv_dzoX-WdFFYRjtNO4JbhTkV2ohqMMwqXspvXtu1bFuuKir7cJfEoZoE4bbJMM5CxO_VnahiNAvW9VNVNcNaFkqCS2QQTQl2dgDCIYJA&lib=MnhKN1XFJJl0YMHurnY_LU_GliXEERNRy';
+window.MONEY_POND_API = 'https://script.google.com/macros/s/AKfycbwSQs_efZ-EOmIlXCCUig5894HTOSqX9iWMRv8K3sgFzw5fLFTWY2ggJooUiGALB7TpTw/exec';
