@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Money Pond</title>
+<meta name="theme-color" content="#F9FFF1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Money Pond">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=Mitr:wght@500&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#3B2A1E;--muted:#6E5A49;--brown:#664930;--mid:#997E67;--sand:#CCBEB1;--peach:#FFDBBB;--card:rgba(250,255,245,.93);--border:#D3E3C4;--line:#E1EBD6;--track:#E9F2DF}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-family:'IBM Plex Sans Thai',system-ui,sans-serif;color:var(--ink);background-color:#F9FFF1;background-repeat:repeat;background-size:552px auto;background-attachment:fixed;background-image:url(bows.jpg);-webkit-text-size-adjust:100%}
+.hero-gif{background-image:url(hero.gif)}
+input,select,button{font-family:inherit;font-size:16px;color:var(--ink)}
+button{cursor:pointer}
+.wrap{max-width:1200px;margin:0 auto;padding:24px 16px 72px;display:flex;flex-direction:column;gap:18px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:22px;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.h2{margin:0;font-family:Mitr,'IBM Plex Sans Thai',sans-serif;font-weight:500;font-size:21px}
+.emo{display:inline-block;transform:translateY(-.14em)}
+header.card{display:flex;flex-wrap:wrap;gap:20px;padding:18px}
+.hero-text{flex:1 1 320px;min-width:0;display:flex;flex-direction:column;justify-content:space-between;gap:16px;padding:6px 4px}
+.eyebrow{font-size:13px;font-weight:600;letter-spacing:.08em;color:var(--brown)}
+h1{margin:4px 0;font-family:Mitr,'IBM Plex Sans Thai',sans-serif;font-weight:500;font-size:32px;line-height:1.25}
+.sub{margin:0;font-size:14px;color:var(--muted)}
+.hero-gif{flex:0 1 380px;min-width:0;width:100%;min-height:200px;border-radius:16px;background-size:cover;background-position:center}
+.row{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:999px;background:var(--peach);color:#4A3524;font-size:13px;font-weight:600}
+select,input[type=text],input[type=date],input[type=number],input[type=password]{height:46px;padding:0 12px;border:1px solid var(--sand);border-radius:12px;background-color:#fff;width:100%}
+select{-webkit-appearance:none;appearance:none;padding-right:44px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23664930' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 16px center;background-size:16px 16px}
+#month{width:auto;min-width:170px}
+.nav{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:6px;border-radius:18px}
+.nav button{height:52px;border:0;border-radius:13px;font-size:16px;font-weight:600;background:transparent;color:#4A3524}
+.nav button.on{background:var(--brown);color:#fff}
+.strip{display:flex;flex-wrap:wrap;gap:8px 20px;justify-content:space-between;padding:14px 20px;border-radius:16px;font-size:14px;color:#4A3524}
+.strip strong{color:var(--ink)}
+.cols{display:flex;flex-wrap:wrap;gap:18px;align-items:flex-start}
+.form{flex:1 1 420px;min-width:0;display:flex;flex-direction:column;gap:18px}
+.side{flex:1 1 320px;min-width:0;display:flex;flex-direction:column;gap:14px}
+.tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;background:var(--track);padding:5px;border-radius:14px}
+.tabs button{height:44px;border:0;border-radius:10px;font-size:14px;font-weight:600;background:transparent;color:#4A3524;padding:0 2px}
+.tabs button.on{background:var(--brown);color:#fff}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.grid2>*,.field{min-width:0}
+input[type=date]{-webkit-appearance:none;appearance:none;display:block;min-width:0;max-width:100%;text-align:left;line-height:44px}
+input[type=date]::-webkit-date-and-time-value{text-align:left;margin:0}
+.field{display:flex;flex-direction:column;gap:6px}
+.field label,.lbl{font-size:14px;font-weight:500}
+.between{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{height:40px;padding:0 14px;border-radius:999px;border:1px solid var(--sand);background:#fff;font-size:14px}
+.chip.on{background:var(--brown);border-color:var(--brown);color:#fff;font-weight:600}
+.ghost{height:36px;padding:0 12px;border:1px dashed var(--mid);border-radius:999px;background:transparent;color:var(--brown);font-size:13px;font-weight:500}
+.addbox{display:none;gap:8px;align-items:flex-end;padding:12px;background:#F0F7E8;border-radius:12px}
+.addbox.show{display:flex}
+.btn{height:46px;padding:0 16px;border:0;border-radius:12px;background:var(--brown);color:#fff;font-weight:600;white-space:nowrap}
+.save{height:54px;border-radius:14px;font-size:17px;width:100%}
+.save:disabled{opacity:.6}
+.outline{height:44px;border:1px solid var(--sand);border-radius:12px;background:#fff;color:var(--brown);font-size:14px;font-weight:500}
+.fixbox{display:flex;flex-direction:column;gap:12px;padding:16px;border:1px solid var(--peach);background:#FFF3E8;border-radius:14px}
+.check{display:flex;align-items:center;gap:10px;font-size:15px;font-weight:500}
+.check input{width:22px;height:22px;accent-color:var(--brown)}
+.hint{margin:0;font-size:12px;color:var(--muted)}
+.hidden{display:none!important}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
+.kpi{display:flex;flex-direction:column;gap:6px;padding:18px;border-radius:16px}
+.kpi .k{font-size:13px;color:var(--muted);display:flex;align-items:center;gap:8px}
+.kpi .v{font-size:26px;font-weight:700}
+.kpi .s{font-size:12px;color:var(--muted)}
+.kpi.dark{background:var(--brown);border:0}
+.kpi.dark .k{color:var(--peach)}.kpi.dark .v{color:#fff}.kpi.dark .s{color:#F1E4D8}
+.sw{width:11px;height:11px;border-radius:3px;display:inline-block;flex:none}
+.sw.inc{background:var(--brown)}.sw.exp{background:var(--mid)}.sw.sav{background:var(--sand);box-shadow:inset 0 0 0 1px #B5A391}.sw.inv{background:var(--peach);box-shadow:inset 0 0 0 1px #D9B08C}
+.fixlist{list-style:none;margin:0;padding:0}
+.fixlist li{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
+.grow{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:2px}
+.small{font-size:12px;color:var(--muted)}
+.badge{font-size:12px;font-weight:600;padding:4px 10px;border-radius:999px;white-space:nowrap;background:#EDE4DA;color:#4A3524}
+.badge.due{background:var(--peach)}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:13px;color:#4A3524}
+.legend span{display:flex;align-items:center;gap:6px}
+.chart{overflow-x:auto}
+.bars{min-width:540px;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px;align-items:end;height:240px;border-bottom:1px solid var(--sand);padding:0 6px}
+.bar-g{display:flex;align-items:flex-end;justify-content:center;gap:4px;height:100%}
+.bar{width:16px;border-radius:5px 5px 0 0}
+.bar.inc{background:var(--brown)}.bar.exp{background:var(--mid)}.bar.sav{background:var(--sand);box-shadow:inset 0 0 0 1px #B5A391}.bar.inv{background:var(--peach);box-shadow:inset 0 0 0 1px #D9B08C}
+.labels{min-width:540px;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px;padding:8px 6px 0;font-size:13px;text-align:center;color:#4A3524}
+.bd{display:grid;grid-template-columns:minmax(96px,140px) minmax(0,1fr) 84px;gap:12px;align-items:center;font-size:14px}
+.track{height:14px;background:var(--track);border-radius:999px;overflow:hidden}
+.fill{height:100%;background:var(--mid);border-radius:999px}
+.right{text-align:right;font-weight:600}
+.tablewrap{overflow-x:auto}
+table{width:100%;min-width:520px;border-collapse:collapse;font-size:14px}
+th{padding:10px 8px;font-weight:500;color:var(--muted);text-align:left;border-bottom:1px solid var(--sand)}
+td{padding:12px 8px;border-bottom:1px solid var(--line)}
+.kind{font-size:12px;font-weight:600;padding:3px 10px;border-radius:999px;white-space:nowrap}
+.kind.income{background:var(--brown);color:#fff}.kind.expense{background:#E6DACF}.kind.saving{background:var(--sand)}.kind.invest{background:var(--peach)}
+.empty{color:var(--muted);font-size:14px;padding:10px 0;margin:0}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--brown);color:#fff;padding:12px 20px;border-radius:999px;font-weight:600;box-shadow:0 6px 20px rgba(59,42,30,.25);opacity:0;transition:opacity .2s;pointer-events:none;z-index:10;max-width:90vw;text-align:center}
+.toast.show{opacity:1}
+.loading{opacity:.55;pointer-events:none}
+.lock{position:fixed;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;padding:24px;background:rgba(249,255,241,.82);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.lockcard{width:100%;max-width:360px;display:flex;flex-direction:column;gap:14px;text-align:center}
+.lockicon{width:88px;height:88px;border-radius:22px;align-self:center;box-shadow:0 6px 18px rgba(59,42,30,.18)}
+#pin{text-align:center;font-size:22px;letter-spacing:.3em}
+.err{margin:0;font-size:14px;color:#8A3A0E;min-height:20px}
+@media (max-width:480px){h1{font-size:27px}.hero-gif{flex-basis:100%;min-height:180px}.card{padding:18px}.kpi .v{font-size:24px}
+.bars,.labels{min-width:0;gap:6px;padding-left:2px;padding-right:2px}.bar{width:9px}.bar-g{gap:2px}
+.tabs button{font-size:13px}.bd{grid-template-columns:88px minmax(0,1fr) 72px}}
+</style>
+</head>
+<body>
+<div class="wrap" id="app">
+
+<header class="card">
+  <div class="hero-text">
+    <div>
+      <div class="eyebrow">MY MONEY POND</div>
+      <h1>บัญชีรายรับรายจ่าย <span class="emo">🎀</span></h1>
+      <p class="sub">ข้อมูลทุกรายการบันทึกลง Google Sheet อัตโนมัติ</p>
+    </div>
+    <div class="row">
+      <span class="pill" id="status">กำลังโหลด…</span>
+      <label for="month" class="small">เดือน</label>
+      <select id="month"></select>
+      <button type="button" class="ghost" id="lockBtn">ล็อก <span class="emo">🔒</span></button>
+    </div>
+  </div>
+  <div class="hero-gif" role="img" aria-label="ภาพตกแต่งผีเสื้อ"></div>
+</header>
+
+<nav class="card nav" aria-label="เมนูหลัก">
+  <button type="button" data-page="entry" class="on">บันทึกข้อมูล <span class="emo">✏️</span></button>
+  <button type="button" data-page="summary">สรุปผล <span class="emo">📊</span></button>
+</nav>
+
+<!-- ===== แท็บ 1: บันทึกข้อมูล ===== -->
+<div id="pageEntry" style="display:flex;flex-direction:column;gap:18px">
+  <div class="card strip" id="strip"></div>
+  <div class="cols">
+    <section class="card form" aria-labelledby="form-h">
+      <h2 id="form-h" class="h2">บันทึกรายการ <span class="emo">✏️</span></h2>
+      <div class="tabs" id="tabs" role="tablist" aria-label="ชนิดรายการ"></div>
+      <div class="grid2">
+        <div class="field"><label for="date">วันที่</label><input id="date" type="date"></div>
+        <div class="field"><label for="amount">จำนวนเงิน (บาท)</label><input id="amount" type="text" inputmode="decimal" placeholder="0.00" autocomplete="off" style="font-weight:600;font-size:17px"></div>
+      </div>
+      <div class="field">
+        <div class="between">
+          <span class="lbl" id="catLabel">ประเภท</span>
+          <button type="button" class="ghost" id="toggleAdd">+ เพิ่มประเภท <span class="emo">🏷️</span></button>
+        </div>
+        <div class="chips" id="chips"></div>
+        <div class="addbox" id="addbox">
+          <div class="field" style="flex:1 1 auto">
+            <label for="newCat" class="small">ชื่อประเภทใหม่</label>
+            <input id="newCat" type="text" placeholder="เช่น ค่าอาหารแมว" autocomplete="off">
+          </div>
+          <button type="button" class="btn" id="addCat">เพิ่ม</button>
+        </div>
+      </div>
+      <div class="fixbox" id="fixbox">
+        <label class="check"><input type="checkbox" id="isFix"> เป็นรายจ่ายประจำ (Fix cost) <span class="emo">🔁</span></label>
+        <div class="grid2 hidden" id="fixFields">
+          <div class="field">
+            <label for="cycle" class="small">รอบตัดเงิน</label>
+            <select id="cycle"><option value="monthly">ทุกเดือน</option><option value="quarterly">ทุก 3 เดือน</option><option value="yearly">ทุกปี</option></select>
+          </div>
+          <div class="field">
+            <label for="dueDay" class="small">ตัดเงินทุกวันที่</label>
+            <input id="dueDay" type="number" min="1" max="31" inputmode="numeric">
+          </div>
+          <p class="hint" style="grid-column:1/-1">ใส่ชื่อในช่องหมายเหตุ เช่น "แอปดูหนัง" ระบบจะลงรายการนี้ให้อัตโนมัติทุกรอบ ไม่ต้องกรอกซ้ำ</p>
+        </div>
+      </div>
+      <div class="field hidden" id="accountBox">
+        <label for="account" id="accountLabel">เก็บเข้าบัญชี</label>
+        <select id="account"></select>
+      </div>
+      <div class="field">
+        <label for="note">หมายเหตุ (ไม่บังคับ)</label>
+        <input id="note" type="text" placeholder="รายละเอียดเพิ่มเติม" autocomplete="off">
+      </div>
+      <button type="button" class="btn save" id="saveBtn">บันทึก</button>
+    </section>
+
+    <section class="card side" aria-labelledby="fix-h">
+      <div class="between" style="align-items:baseline">
+        <h2 id="fix-h" class="h2">รายจ่ายประจำ <span class="emo">📌</span></h2>
+        <span style="font-size:14px;font-weight:600;color:var(--brown)" id="fixTotal"></span>
+      </div>
+      <ul class="fixlist" id="fixList"></ul>
+      <button type="button" class="outline" id="addFixed">+ เพิ่มรายจ่ายประจำ <span class="emo">📌</span></button>
+      <p class="hint">ยกเลิกรายการประจำได้ที่แท็บ FixedCosts ใน Google Sheet (เปลี่ยนช่อง active เป็น FALSE)</p>
+    </section>
+  </div>
+</div>
+
+<!-- ===== แท็บ 2: สรุปผล ===== -->
+<div id="pageSummary" class="hidden" style="flex-direction:column;gap:18px">
+  <section class="kpis" id="kpis" aria-label="สรุปเดือนนี้"></section>
+
+  <section class="card" aria-labelledby="chart-h" style="display:flex;flex-direction:column;gap:20px">
+    <div class="between" style="flex-wrap:wrap">
+      <h2 id="chart-h" class="h2">สรุปรายเดือน <span class="emo">📊</span></h2>
+      <div class="legend">
+        <span><i class="sw inc"></i>รายรับ <span class="emo">💰</span></span>
+        <span><i class="sw exp"></i>รายจ่าย <span class="emo">💸</span></span>
+        <span><i class="sw sav"></i>ออม <span class="emo">🐷</span></span>
+        <span><i class="sw inv"></i>ลงทุน <span class="emo">🌱</span></span>
+      </div>
+    </div>
+    <div class="chart">
+      <div class="bars" id="bars" role="img" aria-label="กราฟแท่งรายรับ รายจ่าย ออม และลงทุน 6 เดือนล่าสุด"></div>
+      <div class="labels" id="barLabels"></div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <h3 style="margin:0;font-size:16px;font-weight:600" id="bdTitle">รายจ่ายตามประเภท</h3>
+      <div id="breakdown" style="display:flex;flex-direction:column;gap:12px"></div>
+    </div>
+  </section>
+
+  <section class="card" aria-labelledby="recent-h" style="display:flex;flex-direction:column;gap:12px">
+    <h2 id="recent-h" class="h2">รายการล่าสุด <span class="emo">🧾</span></h2>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>วันที่</th><th>ชนิด</th><th>ประเภท</th><th>หมายเหตุ</th><th style="text-align:right">จำนวนเงิน</th></tr></thead>
+        <tbody id="recent"></tbody>
+      </table>
+    </div>
+  </section>
+</div>
+
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<div class="lock hidden" id="lock">
+  <form class="card lockcard" id="lockForm" autocomplete="on">
+    <img src="icon-192.png" alt="" class="lockicon">
+    <h2 class="h2">Money Pond <span class="emo">🐟</span></h2>
+    <p class="sub">ใส่ PIN เพื่อเข้าใช้งาน</p>
+    <label for="pin" class="hidden">PIN</label>
+    <input id="pin" type="password" inputmode="numeric" autocomplete="current-password" placeholder="••••••">
+    <button type="submit" class="btn save" id="pinBtn">เข้าใช้งาน <span class="emo">🔓</span></button>
+    <p class="err" id="pinErr" role="alert"></p>
+  </form>
+</div>
+
+<script src="config.js"></script>
+
+<script>
+var META = {
+  income: { label: 'รายรับ', emo: '💰' },
+  expense: { label: 'รายจ่าย', emo: '💸' },
+  saving: { label: 'เงินออม', emo: '🐷' },
+  invest: { label: 'ลงทุน', emo: '🌱' }
+};
+var ORDER = ['income', 'expense', 'saving', 'invest'];
+var TH_SHORT = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+var S = { data: null, page: 'entry', tab: 'expense', cat: {}, month: '', busy: false };
+
+var CFG = { url: String(window.MONEY_POND_API || '').trim(), pin: '' };
+try { CFG.pin = localStorage.getItem('mp_pin') || ''; } catch (e) {}
+
+function api(action, payload) {
+  if (!/^https:\/\/script\.google\.com\/.+\/exec$/.test(CFG.url)) {
+    return Promise.reject(new Error('ยังไม่ได้ใส่ลิงก์ Apps Script ในไฟล์ config.js'));
+  }
+  return fetch(CFG.url, { method: 'POST', body: JSON.stringify({ action: action, pin: CFG.pin, payload: payload || {} }) })
+    .then(function (r) { return r.json(); })
+    .then(function (j) { if (!j.ok) throw new Error(j.error); return j.data; });
+}
+function showLock(msg) {
+  $('lock').classList.remove('hidden');
+  $('pinErr').textContent = msg || '';
+  setTimeout(function () { $('pin').focus(); }, 150);
+}
+function unlock(e) {
+  if (e) e.preventDefault();
+  var v = $('pin').value.trim();
+  if (!v) return;
+  CFG.pin = v; $('pinBtn').disabled = true; $('pinErr').textContent = '';
+  api('ping').then(function () {
+    try { localStorage.setItem('mp_pin', v); } catch (err) {}
+    $('pin').value = ''; $('pinBtn').disabled = false;
+    $('lock').classList.add('hidden');
+    load('');
+  }).catch(function (err) {
+    CFG.pin = ''; $('pinBtn').disabled = false;
+    $('pinErr').textContent = /fetch|network|load/i.test(err.message) ? 'เชื่อมต่อไม่ได้ ตรวจสอบอินเทอร์เน็ตแล้วลองใหม่' : err.message;
+  });
+}
+function lockNow() {
+  CFG.pin = '';
+  try { localStorage.removeItem('mp_pin'); } catch (e) {}
+  showLock('');
+}
+
+function $(id) { return document.getElementById(id); }
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+function baht(n) { n = Number(n || 0); return (n < 0 ? '−' : '') + '฿' + Math.abs(n).toLocaleString('en-US', { maximumFractionDigits: 2 }); }
+function E(e) { return '<span class="emo">' + e + '</span>'; }
+function todayStr() { var d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+function thDate(s) { var p = s.split('-'); return Number(p[2]) + ' ' + TH_SHORT[Number(p[1]) - 1]; }
+function toast(t) { var el = $('toast'); el.textContent = t; el.classList.add('show'); clearTimeout(toast.t); toast.t = setTimeout(function () { el.classList.remove('show'); }, 2800); }
+
+function load(month) {
+  $('app').classList.add('loading');
+  api('getData', { monthKey: month || '' }).then(gotData).catch(fail);
+}
+function gotData(d) {
+  S.data = d; S.month = d.monthKey; S.busy = false;
+  $('app').classList.remove('loading');
+  $('status').innerHTML = 'เชื่อม Google Sheet แล้ว ' + E('🍀');
+  renderAll();
+}
+function fail(e) {
+  S.busy = false;
+  $('app').classList.remove('loading');
+  $('saveBtn').disabled = false;
+  renderTabs();
+  var msg = e && e.message ? e.message : String(e);
+  if (/PIN/.test(msg)) { CFG.pin = ''; try { localStorage.removeItem('mp_pin'); } catch (x) {} showLock(msg); return; }
+  if (/fetch|network|load failed/i.test(msg)) msg = 'เชื่อมต่อไม่ได้ ตรวจสอบอินเทอร์เน็ตแล้วลองใหม่';
+  toast('เกิดข้อผิดพลาด: ' + msg);
+}
+
+function renderAll() { renderPage(); renderMonth(); renderTabs(); renderCats(); renderAccounts(); renderStrip(); renderFixed(); renderKpis(); renderChart(); renderBreakdown(); renderRecent(); }
+
+function renderPage() {
+  document.querySelectorAll('.nav button').forEach(function (b) { b.classList.toggle('on', b.dataset.page === S.page); });
+  $('pageEntry').style.display = S.page === 'entry' ? 'flex' : 'none';
+  $('pageSummary').classList.toggle('hidden', S.page !== 'summary');
+  $('pageSummary').style.display = S.page === 'summary' ? 'flex' : 'none';
+}
+function renderMonth() {
+  $('month').innerHTML = S.data.monthOptions.map(function (o) { return '<option value="' + o.key + '"' + (o.key === S.month ? ' selected' : '') + '>' + esc(o.label) + '</option>'; }).join('');
+}
+function renderTabs() {
+  $('tabs').innerHTML = ORDER.map(function (k) {
+    var on = k === S.tab;
+    return '<button type="button" role="tab" aria-selected="' + on + '" data-tab="' + k + '" class="' + (on ? 'on' : '') + '">' + META[k].label + ' ' + E(META[k].emo) + '</button>';
+  }).join('');
+  $('catLabel').textContent = 'ประเภท' + META[S.tab].label;
+  $('saveBtn').innerHTML = S.busy ? 'กำลังบันทึก…' : 'บันทึก' + META[S.tab].label + ' ' + E('🌷');
+  $('fixbox').classList.toggle('hidden', S.tab !== 'expense');
+  $('accountBox').classList.toggle('hidden', S.tab !== 'saving' && S.tab !== 'invest');
+}
+function catList() { return (S.data && S.data.cats[S.tab]) || []; }
+function renderCats() {
+  var list = catList();
+  if (list.indexOf(S.cat[S.tab]) < 0) S.cat[S.tab] = list[0];
+  $('chips').innerHTML = list.length ? list.map(function (n) {
+    var on = n === S.cat[S.tab];
+    return '<button type="button" class="chip' + (on ? ' on' : '') + '" aria-pressed="' + on + '" data-name="' + esc(n) + '">' + esc(n) + '</button>';
+  }).join('') : '<p class="empty">ยังไม่มีประเภท กด "+ เพิ่มประเภท" ได้เลย</p>';
+}
+function renderAccounts() {
+  if (S.tab !== 'saving' && S.tab !== 'invest') return;
+  var list = S.data.cats['account_' + S.tab] || [];
+  $('accountLabel').textContent = S.tab === 'saving' ? 'เก็บเข้าบัญชี' : 'ลงทุนผ่าน';
+  $('account').innerHTML = list.map(function (n) { return '<option>' + esc(n) + '</option>'; }).join('') || '<option value="">-</option>';
+}
+function renderStrip() {
+  var s = S.data.summary;
+  $('strip').innerHTML =
+    '<span>รายรับเดือนนี้ ' + E('💰') + ' <strong>' + baht(s.income) + '</strong></span>' +
+    '<span>ใช้ไป ' + E('💸') + ' <strong>' + baht(s.expense) + '</strong></span>' +
+    '<span>ออม + ลงทุน <strong>' + baht(s.saving + s.invest) + '</strong></span>' +
+    '<span>คงเหลือใช้ได้ <strong style="color:var(--brown)">' + baht(s.balance) + ' ' + E('✨') + '</strong></span>';
+}
+function renderFixed() {
+  var f = S.data.fixed, total = 0;
+  f.forEach(function (x) { total += x.monthly; });
+  $('fixTotal').textContent = baht(Math.round(total)) + ' / เดือน';
+  $('fixList').innerHTML = f.length ? f.map(function (x) {
+    return '<li><div class="grow"><span style="font-size:15px;font-weight:500">' + esc(x.name) + '</span><span class="small">' + esc(x.meta) + '</span></div>' +
+      '<span style="font-size:15px;font-weight:600">' + baht(x.amount) + '</span><span class="badge' + (x.paid ? '' : ' due') + '">' + esc(x.status) + '</span></li>';
+  }).join('') : '<li class="empty">ยังไม่มีรายจ่ายประจำ</li>';
+}
+function renderKpis() {
+  var s = S.data.summary;
+  var chg = s.prevIncome > 0 ? Math.round((s.income - s.prevIncome) / s.prevIncome * 100) : null;
+  var chgTxt = chg === null ? 'เดือนก่อนยังไม่มีข้อมูล' : (chg >= 0 ? '+' : '') + chg + '% จากเดือนก่อน';
+  function card(sw, k, v, sub) { return '<div class="card kpi"><span class="k"><i class="sw ' + sw + '"></i>' + k + '</span><span class="v">' + v + '</span><span class="s">' + sub + '</span></div>'; }
+  $('kpis').innerHTML =
+    card('inc', 'รายรับ ' + E('💰'), baht(s.income), chgTxt) +
+    card('exp', 'รายจ่าย ' + E('💸'), baht(s.expense), 'Fix cost ' + baht(s.fixed) + ' · ผันแปร ' + baht(s.variable)) +
+    card('sav', 'เก็บเข้าธนาคาร ' + E('🏦'), baht(s.saving), 'สะสมทั้งปี ' + baht(s.ytdSaving)) +
+    card('inv', 'เก็บเพื่อลงทุน ' + E('🌱'), baht(s.invest), 'สะสมทั้งปี ' + baht(s.ytdInvest)) +
+    '<div class="kpi dark"><span class="k">คงเหลือใช้ได้ ' + E('✨') + '</span><span class="v">' + baht(s.balance) + '</span><span class="s">รายรับ − รายจ่าย − ออม − ลงทุน</span></div>';
+}
+function renderChart() {
+  var ms = S.data.months, max = 0;
+  ms.forEach(function (m) { max = Math.max(max, m.income, m.expense, m.saving, m.invest); });
+  var H = 220;
+  function h(v) { return max ? Math.max(v > 0 ? 3 : 0, Math.round(v / max * H)) : 0; }
+  $('bars').innerHTML = ms.map(function (m) {
+    return '<div class="bar-g" title="' + m.label + '">' +
+      '<div class="bar inc" style="height:' + h(m.income) + 'px" title="รายรับ ' + baht(m.income) + '"></div>' +
+      '<div class="bar exp" style="height:' + h(m.expense) + 'px" title="รายจ่าย ' + baht(m.expense) + '"></div>' +
+      '<div class="bar sav" style="height:' + h(m.saving) + 'px" title="ออม ' + baht(m.saving) + '"></div>' +
+      '<div class="bar inv" style="height:' + h(m.invest) + 'px" title="ลงทุน ' + baht(m.invest) + '"></div></div>';
+  }).join('');
+  $('barLabels').innerHTML = ms.map(function (m) { return '<span>' + m.label + '</span>'; }).join('');
+}
+function renderBreakdown() {
+  var b = S.data.breakdown, max = b.length ? b[0].amount : 0;
+  $('bdTitle').innerHTML = 'รายจ่ายตามประเภท — ' + esc(S.data.monthLabel) + ' ' + E('🍰');
+  $('breakdown').innerHTML = b.length ? b.map(function (x) {
+    return '<div class="bd"><span>' + esc(x.name) + '</span><div class="track"><div class="fill" style="width:' + Math.round(x.amount / max * 100) + '%"></div></div><span class="right">' + baht(x.amount) + '</span></div>';
+  }).join('') : '<p class="empty">เดือนนี้ยังไม่มีรายจ่าย</p>';
+}
+function renderRecent() {
+  var r = S.data.recent;
+  var sign = { income: '+', expense: '−', saving: '', invest: '' };
+  var short = { income: 'รายรับ', expense: 'รายจ่าย', saving: 'ออม', invest: 'ลงทุน' };
+  $('recent').innerHTML = r.length ? r.map(function (x) {
+    var note = [x.note, x.account, x.isFixed ? 'Fix cost' : ''].filter(Boolean).join(' · ');
+    return '<tr><td>' + thDate(x.date) + '</td><td><span class="kind ' + x.type + '">' + (short[x.type] || x.type) + '</span></td><td>' + esc(x.category) + '</td><td class="small">' + esc(note) + '</td><td class="right">' + sign[x.type] + baht(x.amount) + '</td></tr>';
+  }).join('') : '<tr><td colspan="5" class="empty">เดือนนี้ยังไม่มีรายการ</td></tr>';
+}
+
+function setTab(k) { S.tab = k; $('addbox').classList.remove('show'); renderTabs(); renderCats(); renderAccounts(); }
+function syncFix() { $('fixFields').classList.toggle('hidden', !$('isFix').checked); }
+
+function save() {
+  if (S.busy) return;
+  var amt = $('amount').value.trim();
+  var cat = S.cat[S.tab];
+  if (!(Number(amt.replace(/,/g, '')) > 0)) { toast('กรุณาใส่จำนวนเงิน'); $('amount').focus(); return; }
+  if (!cat) { toast('กรุณาเลือกประเภท'); return; }
+  var p = {
+    type: S.tab, date: $('date').value || todayStr(), amount: amt, category: cat,
+    note: $('note').value.trim(), monthKey: S.month,
+    isFixed: S.tab === 'expense' && $('isFix').checked,
+    cycle: $('cycle').value, dueDay: $('dueDay').value,
+    account: (S.tab === 'saving' || S.tab === 'invest') ? $('account').value : ''
+  };
+  S.busy = true; $('saveBtn').disabled = true; renderTabs();
+  api('addTransaction', p).then(function (d) {
+    $('saveBtn').disabled = false;
+    $('amount').value = ''; $('note').value = ''; $('isFix').checked = false; syncFix();
+    gotData(d);
+    toast('บันทึกแล้ว 🌷');
+  }).catch(fail);
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+  $('date').value = todayStr();
+  $('dueDay').value = new Date().getDate();
+  document.querySelector('.nav').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    S.page = b.dataset.page; renderPage(); window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+  $('tabs').addEventListener('click', function (e) { var b = e.target.closest('button'); if (b) setTab(b.dataset.tab); });
+  $('chips').addEventListener('click', function (e) { var b = e.target.closest('.chip'); if (b) { S.cat[S.tab] = b.dataset.name; renderCats(); } });
+  $('toggleAdd').addEventListener('click', function () { $('addbox').classList.toggle('show'); if ($('addbox').classList.contains('show')) $('newCat').focus(); });
+  $('addCat').addEventListener('click', function () {
+    var name = $('newCat').value.trim(); if (!name) { $('newCat').focus(); return; }
+    var tab = S.tab;
+    api('addCategory', { type: tab, name: name }).then(function (c) {
+      S.data.cats = c; S.cat[tab] = name; $('newCat').value = ''; $('addbox').classList.remove('show');
+      renderCats(); toast('เพิ่มประเภทแล้ว 🏷️');
+    }).catch(fail);
+  });
+  $('newCat').addEventListener('keydown', function (e) { if (e.key === 'Enter') $('addCat').click(); });
+  $('isFix').addEventListener('change', syncFix);
+  $('date').addEventListener('change', function () { var d = $('date').value; if (d) $('dueDay').value = Number(d.slice(8, 10)); });
+  $('saveBtn').addEventListener('click', save);
+  $('month').addEventListener('change', function () { load($('month').value); });
+  $('addFixed').addEventListener('click', function () {
+    setTab('expense'); $('isFix').checked = true; syncFix();
+    $('form-h').scrollIntoView({ behavior: 'smooth', block: 'start' }); $('amount').focus();
+  });
+  $('lockForm').addEventListener('submit', unlock);
+  $('lockBtn').addEventListener('click', lockNow);
+  if (CFG.pin) load(''); else showLock('');
+});
+</script>
+</body>
+</html>
