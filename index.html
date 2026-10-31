@@ -112,6 +112,18 @@ td{padding:12px 8px;border-bottom:1px solid var(--line)}
 .lockicon{width:88px;height:88px;border-radius:22px;align-self:center;box-shadow:0 6px 18px rgba(59,42,30,.18)}
 #pin{text-align:center;font-size:22px;letter-spacing:.3em}
 .err{margin:0;font-size:14px;color:#8A3A0E;min-height:20px}
+.chip .x{margin-left:6px;font-weight:700;opacity:.7}
+.chip.off{border-style:dashed;color:var(--muted);background:transparent}
+.ghost.on{background:var(--brown);border-color:var(--brown);border-style:solid;color:#fff}
+.mini{height:32px;padding:0 10px;border:1px solid var(--sand);border-radius:999px;background:#fff;color:var(--brown);font-size:12px;font-weight:600;white-space:nowrap}
+.mini.warn{background:#8A3A0E;border-color:#8A3A0E;color:#fff}
+tr.click{cursor:pointer}tr.click:hover td,tr.click:active td{background:#F0F7E8}
+td.ed{width:28px;text-align:center;color:var(--mid);padding-left:0}
+.pill.sync{background:#EDE4DA}
+.sheet{text-align:left;max-width:440px;max-height:calc(100vh - 32px);overflow:auto}
+.sheet .h2{text-align:center}
+.danger{height:46px;border:1px solid #D9A58C;border-radius:12px;background:#fff;color:#8A3A0E;font-weight:600}
+.danger.sure{background:#8A3A0E;border-color:#8A3A0E;color:#fff}
 @media (max-width:480px){h1{font-size:27px}.hero-gif{flex-basis:100%;min-height:180px}.card{padding:18px}.kpi .v{font-size:24px}
 .bars,.labels{min-width:0;gap:6px;padding-left:2px;padding-right:2px}.bar{width:9px}.bar-g{gap:2px}
 .tabs button{font-size:13px}.bd{grid-template-columns:88px minmax(0,1fr) 72px}}
@@ -156,9 +168,16 @@ td{padding:12px 8px;border-bottom:1px solid var(--line)}
       <div class="field">
         <div class="between">
           <span class="lbl" id="catLabel">ประเภท</span>
-          <button type="button" class="ghost" id="toggleAdd">+ เพิ่มประเภท <span class="emo">🏷️</span></button>
+          <div class="row" style="gap:6px">
+            <button type="button" class="ghost" id="toggleManage">จัดการ <span class="emo">⚙️</span></button>
+            <button type="button" class="ghost" id="toggleAdd">+ เพิ่มประเภท <span class="emo">🏷️</span></button>
+          </div>
         </div>
         <div class="chips" id="chips"></div>
+        <div class="hidden" id="hiddenBox" style="display:flex;flex-direction:column;gap:8px">
+          <p class="hint">แตะประเภทด้านบนเพื่อซ่อน · ประเภทที่ซ่อนไว้ (แตะเพื่อกู้คืน):</p>
+          <div class="chips" id="hiddenChips"></div>
+        </div>
         <div class="addbox" id="addbox">
           <div class="field" style="flex:1 1 auto">
             <label for="newCat" class="small">ชื่อประเภทใหม่</label>
@@ -199,7 +218,7 @@ td{padding:12px 8px;border-bottom:1px solid var(--line)}
       </div>
       <ul class="fixlist" id="fixList"></ul>
       <button type="button" class="outline" id="addFixed">+ เพิ่มรายจ่ายประจำ <span class="emo">📌</span></button>
-      <p class="hint">ยกเลิกรายการประจำได้ที่แท็บ FixedCosts ใน Google Sheet (เปลี่ยนช่อง active เป็น FALSE)</p>
+      <p class="hint">กด "ยกเลิก" เพื่อหยุดลงรายการนี้อัตโนมัติ (รายการที่ลงไปแล้วยังอยู่ครบ)</p>
     </section>
   </div>
 </div>
@@ -229,10 +248,13 @@ td{padding:12px 8px;border-bottom:1px solid var(--line)}
   </section>
 
   <section class="card" aria-labelledby="recent-h" style="display:flex;flex-direction:column;gap:12px">
-    <h2 id="recent-h" class="h2">รายการล่าสุด <span class="emo">🧾</span></h2>
+    <div class="between" style="align-items:baseline;flex-wrap:wrap">
+      <h2 id="recent-h" class="h2">รายการเดือนนี้ <span class="emo">🧾</span></h2>
+      <span class="small">แตะรายการเพื่อแก้ไขหรือลบ</span>
+    </div>
     <div class="tablewrap">
       <table>
-        <thead><tr><th>วันที่</th><th>ชนิด</th><th>ประเภท</th><th>หมายเหตุ</th><th style="text-align:right">จำนวนเงิน</th></tr></thead>
+        <thead><tr><th>วันที่</th><th>ชนิด</th><th>ประเภท</th><th>หมายเหตุ</th><th style="text-align:right">จำนวนเงิน</th><th></th></tr></thead>
         <tbody id="recent"></tbody>
       </table>
     </div>
@@ -241,6 +263,25 @@ td{padding:12px 8px;border-bottom:1px solid var(--line)}
 
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<div class="lock hidden" id="editor">
+  <form class="card lockcard sheet" id="editForm" autocomplete="off">
+    <h2 class="h2">แก้ไขรายการ <span class="emo">✏️</span></h2>
+    <div class="grid2">
+      <div class="field"><label for="eType">ชนิด</label><select id="eType"></select></div>
+      <div class="field"><label for="eDate">วันที่</label><input id="eDate" type="date"></div>
+    </div>
+    <div class="field"><label for="eAmount">จำนวนเงิน (บาท)</label><input id="eAmount" type="text" inputmode="decimal" style="font-weight:600;font-size:17px"></div>
+    <div class="field"><label for="eCat">ประเภท</label><select id="eCat"></select></div>
+    <div class="field hidden" id="eAccBox"><label for="eAcc" id="eAccLabel">บัญชี</label><select id="eAcc"></select></div>
+    <div class="field"><label for="eNote">หมายเหตุ</label><input id="eNote" type="text"></div>
+    <button type="submit" class="btn save">บันทึกการแก้ไข <span class="emo">🌷</span></button>
+    <div class="grid2">
+      <button type="button" class="outline" id="eCancel">ปิด</button>
+      <button type="button" class="danger" id="eDelete">ลบรายการ <span class="emo">🗑️</span></button>
+    </div>
+  </form>
+</div>
 
 <div class="lock hidden" id="lock">
   <form class="card lockcard" id="lockForm" autocomplete="on">
@@ -265,11 +306,17 @@ var META = {
 };
 var ORDER = ['income', 'expense', 'saving', 'invest'];
 var TH_SHORT = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
-var S = { data: null, page: 'entry', tab: 'expense', cat: {}, month: '', busy: false };
+var TH_FULL = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+var CYC = { monthly: { months: 1, label: 'ทุกเดือน' }, quarterly: { months: 3, label: 'ทุก 3 เดือน' }, yearly: { months: 12, label: 'ทุกปี' } };
+var CACHE_KEY = 'mp_cache_v2';
+
+// raw = ข้อมูลดิบจากชีต, D = ค่าที่คำนวณแล้วสำหรับเดือนที่เลือก
+var S = { raw: null, D: null, page: 'entry', tab: 'expense', cat: {}, month: '', manage: false, editId: null, pending: 0, synced: false };
 
 var CFG = { url: String(window.MONEY_POND_API || '').trim(), pin: '' };
 try { CFG.pin = localStorage.getItem('mp_pin') || ''; } catch (e) {}
 
+/* ---------- เชื่อมต่อ Apps Script ---------- */
 function api(action, payload) {
   if (!/^https:\/\/script\.google\.com\/.+\/exec$/.test(CFG.url)) {
     return Promise.reject(new Error('ยังไม่ได้ใส่ลิงก์ Apps Script ในไฟล์ config.js'));
@@ -278,6 +325,47 @@ function api(action, payload) {
     .then(function (r) { return r.json(); })
     .then(function (j) { if (!j.ok) throw new Error(j.error); return j.data; });
 }
+
+// คิวส่งงานไปชีตทีละคำสั่งตามลำดับ (หน้าเว็บอัปเดตไปก่อนแล้ว ไม่ต้องรอ)
+var Q = Promise.resolve();
+function send(action, payload) {
+  S.pending++; renderStatus();
+  Q = Q.then(function () { return api(action, payload); })
+    .then(function () { S.pending--; renderStatus(); },
+          function (err) { S.pending--; syncFail(err); });
+}
+function refresh() {
+  S.pending++; renderStatus();
+  Q = Q.then(function () { return api('getAll'); })
+    .then(function (raw) {
+      S.pending--;
+      // ถ้ามีงานใหม่เข้าคิวระหว่างโหลด ให้รอโหลดใหม่หลังงานนั้นเสร็จ (กันรายการที่เพิ่งกรอกหาย)
+      if (S.pending > 0) { refresh(); return; }
+      S.synced = true; setRaw(raw);
+    },
+          function (err) { S.pending--; syncFail(err, true); });
+}
+function syncFail(err, fromRefresh) {
+  var msg = err && err.message ? err.message : String(err);
+  if (/PIN/.test(msg)) { CFG.pin = ''; try { localStorage.removeItem('mp_pin'); } catch (x) {} showLock(msg); renderStatus(); return; }
+  if (/fetch|network|load failed/i.test(msg)) msg = 'เชื่อมต่อไม่ได้ ตรวจสอบอินเทอร์เน็ตแล้วลองใหม่';
+  toast('บันทึกลงชีตไม่สำเร็จ: ' + msg);
+  renderStatus();
+  if (!fromRefresh) refresh(); // ดึงข้อมูลจริงจากชีตมาแสดงใหม่ จะได้ไม่คลาดกัน
+}
+
+function setRaw(raw) {
+  S.raw = raw;
+  try { localStorage.setItem(CACHE_KEY, JSON.stringify(raw)); } catch (e) {}
+  $('app').classList.remove('loading');
+  renderAll();
+}
+function changed() {
+  try { localStorage.setItem(CACHE_KEY, JSON.stringify(S.raw)); } catch (e) {}
+  renderAll();
+}
+
+/* ---------- PIN ---------- */
 function showLock(msg) {
   $('lock').classList.remove('hidden');
   $('pinErr').textContent = msg || '';
@@ -288,11 +376,11 @@ function unlock(e) {
   var v = $('pin').value.trim();
   if (!v) return;
   CFG.pin = v; $('pinBtn').disabled = true; $('pinErr').textContent = '';
-  api('ping').then(function () {
+  api('getAll').then(function (raw) {
     try { localStorage.setItem('mp_pin', v); } catch (err) {}
     $('pin').value = ''; $('pinBtn').disabled = false;
     $('lock').classList.add('hidden');
-    load('');
+    S.synced = true; setRaw(raw);
   }).catch(function (err) {
     CFG.pin = ''; $('pinBtn').disabled = false;
     $('pinErr').textContent = /fetch|network|load/i.test(err.message) ? 'เชื่อมต่อไม่ได้ ตรวจสอบอินเทอร์เน็ตแล้วลองใหม่' : err.message;
@@ -300,41 +388,101 @@ function unlock(e) {
 }
 function lockNow() {
   CFG.pin = '';
-  try { localStorage.removeItem('mp_pin'); } catch (e) {}
+  try { localStorage.removeItem('mp_pin'); localStorage.removeItem(CACHE_KEY); } catch (e) {}
   showLock('');
 }
 
+/* ---------- ตัวช่วย ---------- */
 function $(id) { return document.getElementById(id); }
 function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
 function baht(n) { n = Number(n || 0); return (n < 0 ? '−' : '') + '฿' + Math.abs(n).toLocaleString('en-US', { maximumFractionDigits: 2 }); }
 function E(e) { return '<span class="emo">' + e + '</span>'; }
-function todayStr() { var d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+function pad(n) { return String(n).padStart(2, '0'); }
+function ymdOf(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+function todayStr() { return ymdOf(new Date()); }
+function curKey() { return todayStr().slice(0, 7); }
+function shiftKey(key, n) { var d = new Date(Number(key.slice(0, 4)), Number(key.slice(5, 7)) - 1 + n, 1); return d.getFullYear() + '-' + pad(d.getMonth() + 1); }
 function thDate(s) { var p = s.split('-'); return Number(p[2]) + ' ' + TH_SHORT[Number(p[1]) - 1]; }
 function toast(t) { var el = $('toast'); el.textContent = t; el.classList.add('show'); clearTimeout(toast.t); toast.t = setTimeout(function () { el.classList.remove('show'); }, 2800); }
-
-function load(month) {
-  $('app').classList.add('loading');
-  api('getData', { monthKey: month || '' }).then(gotData).catch(fail);
+function uid() {
+  if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) { var r = Math.random() * 16 | 0; return (c === 'x' ? r : (r & 3 | 8)).toString(16); });
 }
-function gotData(d) {
-  S.data = d; S.month = d.monthKey; S.busy = false;
-  $('app').classList.remove('loading');
-  $('status').innerHTML = 'เชื่อม Google Sheet แล้ว ' + E('🍀');
-  renderAll();
+function num(s) { return Number(String(s || '').replace(/,/g, '').trim()); }
+function findTx(id) { return S.raw.tx.filter(function (t) { return t.id === id; })[0]; }
+
+/* ---------- ประเภท ---------- */
+function catRows(type) {
+  return S.raw.cats.filter(function (c) { return c.type === type; }).sort(function (a, b) { return a.sort - b.sort; });
 }
-function fail(e) {
-  S.busy = false;
-  $('app').classList.remove('loading');
-  $('saveBtn').disabled = false;
-  renderTabs();
-  var msg = e && e.message ? e.message : String(e);
-  if (/PIN/.test(msg)) { CFG.pin = ''; try { localStorage.removeItem('mp_pin'); } catch (x) {} showLock(msg); return; }
-  if (/fetch|network|load failed/i.test(msg)) msg = 'เชื่อมต่อไม่ได้ ตรวจสอบอินเทอร์เน็ตแล้วลองใหม่';
-  toast('เกิดข้อผิดพลาด: ' + msg);
+function activeCats(type) { return catRows(type).filter(function (c) { return c.active; }).map(function (c) { return c.name; }); }
+function hiddenCats(type) { return catRows(type).filter(function (c) { return !c.active; }).map(function (c) { return c.name; }); }
+
+/* ---------- คำนวณสรุป (ทำในเครื่อง ไม่ต้องรอชีต) ---------- */
+function nextDue(f) {
+  var base = f.last || f.start; if (!base) return null;
+  var c = CYC[f.cycle] || CYC.monthly;
+  var y = Number(base.slice(0, 4)), m = Number(base.slice(5, 7)) - 1 + c.months;
+  var day = Math.min(Number(f.dueDay) || 1, new Date(y, m + 1, 0).getDate());
+  return new Date(y, m, day);
+}
+function derive() {
+  var tx = S.raw.tx, key = S.month || curKey(), cur = curKey();
+  S.month = key;
+  function sum(k) {
+    var s = { income: 0, expense: 0, saving: 0, invest: 0, fixed: 0 };
+    tx.forEach(function (t) {
+      if (t.date.slice(0, 7) !== k || s[t.type] === undefined) return;
+      s[t.type] += t.amount;
+      if (t.type === 'expense' && t.isFixed) s.fixed += t.amount;
+    });
+    return s;
+  }
+  var s = sum(key), prev = sum(shiftKey(key, -1));
+  var ytd = { saving: 0, invest: 0 };
+  tx.forEach(function (t) { var k = t.date.slice(0, 7); if (k.slice(0, 4) === key.slice(0, 4) && k <= key && ytd[t.type] !== undefined) ytd[t.type] += t.amount; });
+
+  var months = [];
+  for (var i = 5; i >= 0; i--) { var k = shiftKey(key, -i), v = sum(k); months.push({ label: TH_SHORT[Number(k.slice(5, 7)) - 1], income: v.income, expense: v.expense, saving: v.saving, invest: v.invest }); }
+
+  var bd = {};
+  tx.forEach(function (t) { if (t.date.slice(0, 7) === key && t.type === 'expense') bd[t.category] = (bd[t.category] || 0) + t.amount; });
+  var breakdown = Object.keys(bd).map(function (k) { return { name: k, amount: bd[k] }; }).sort(function (a, b) { return b.amount - a.amount; });
+
+  var recent = tx.filter(function (t) { return t.date.slice(0, 7) === key; })
+    .sort(function (a, b) { return a.date === b.date ? (b.created || 0) - (a.created || 0) : (b.date > a.date ? 1 : -1); });
+
+  var keys = {}; keys[cur] = true; keys[key] = true;
+  tx.forEach(function (t) { keys[t.date.slice(0, 7)] = true; });
+  var monthOptions = Object.keys(keys).sort().reverse().map(function (k) { return { key: k, label: TH_FULL[Number(k.slice(5, 7)) - 1] + ' ' + (Number(k.slice(0, 4)) + 543) }; });
+
+  var fixed = S.raw.fixed.map(function (f) {
+    var c = CYC[f.cycle] || CYC.monthly, next = nextDue(f), status = 'รอตัด', paid = false;
+    if (f.last && f.last.slice(0, 7) === cur) { status = 'ตัดแล้ว'; paid = true; }
+    else if (next && ymdOf(next).slice(0, 7) !== cur) { status = 'รอบหน้า ' + next.getDate() + ' ' + TH_SHORT[next.getMonth()]; paid = true; }
+    return { id: f.id, name: f.name, amount: f.amount, meta: c.label + ' · วันที่ ' + f.dueDay, status: status, paid: paid, monthly: f.amount / c.months };
+  });
+
+  S.D = {
+    monthLabel: TH_FULL[Number(key.slice(5, 7)) - 1],
+    summary: { income: s.income, expense: s.expense, saving: s.saving, invest: s.invest, fixed: s.fixed, variable: s.expense - s.fixed,
+      balance: s.income - s.expense - s.saving - s.invest, prevIncome: prev.income, ytdSaving: ytd.saving, ytdInvest: ytd.invest },
+    months: months, breakdown: breakdown, recent: recent, monthOptions: monthOptions, fixed: fixed
+  };
 }
 
-function renderAll() { renderPage(); renderMonth(); renderTabs(); renderCats(); renderAccounts(); renderStrip(); renderFixed(); renderKpis(); renderChart(); renderBreakdown(); renderRecent(); }
-
+/* ---------- แสดงผล ---------- */
+function renderAll() {
+  if (!S.raw) return;
+  derive();
+  renderPage(); renderStatus(); renderMonth(); renderTabs(); renderCats(); renderAccounts(); renderStrip(); renderFixed(); renderKpis(); renderChart(); renderBreakdown(); renderRecent();
+}
+function renderStatus() {
+  var el = $('status');
+  if (S.pending > 0) { el.className = 'pill sync'; el.innerHTML = 'กำลังซิงก์… ' + E('⏳'); }
+  else if (!S.synced) { el.className = 'pill sync'; el.innerHTML = 'กำลังโหลด… ' + E('⏳'); }
+  else { el.className = 'pill'; el.innerHTML = 'เชื่อม Google Sheet แล้ว ' + E('🍀'); }
+}
 function renderPage() {
   document.querySelectorAll('.nav button').forEach(function (b) { b.classList.toggle('on', b.dataset.page === S.page); });
   $('pageEntry').style.display = S.page === 'entry' ? 'flex' : 'none';
@@ -342,7 +490,7 @@ function renderPage() {
   $('pageSummary').style.display = S.page === 'summary' ? 'flex' : 'none';
 }
 function renderMonth() {
-  $('month').innerHTML = S.data.monthOptions.map(function (o) { return '<option value="' + o.key + '"' + (o.key === S.month ? ' selected' : '') + '>' + esc(o.label) + '</option>'; }).join('');
+  $('month').innerHTML = S.D.monthOptions.map(function (o) { return '<option value="' + o.key + '"' + (o.key === S.month ? ' selected' : '') + '>' + esc(o.label) + '</option>'; }).join('');
 }
 function renderTabs() {
   $('tabs').innerHTML = ORDER.map(function (k) {
@@ -350,44 +498,52 @@ function renderTabs() {
     return '<button type="button" role="tab" aria-selected="' + on + '" data-tab="' + k + '" class="' + (on ? 'on' : '') + '">' + META[k].label + ' ' + E(META[k].emo) + '</button>';
   }).join('');
   $('catLabel').textContent = 'ประเภท' + META[S.tab].label;
-  $('saveBtn').innerHTML = S.busy ? 'กำลังบันทึก…' : 'บันทึก' + META[S.tab].label + ' ' + E('🌷');
+  $('saveBtn').innerHTML = 'บันทึก' + META[S.tab].label + ' ' + E('🌷');
   $('fixbox').classList.toggle('hidden', S.tab !== 'expense');
   $('accountBox').classList.toggle('hidden', S.tab !== 'saving' && S.tab !== 'invest');
 }
-function catList() { return (S.data && S.data.cats[S.tab]) || []; }
 function renderCats() {
-  var list = catList();
+  if (!S.raw) return;
+  var list = activeCats(S.tab), hid = hiddenCats(S.tab);
   if (list.indexOf(S.cat[S.tab]) < 0) S.cat[S.tab] = list[0];
+  $('toggleManage').classList.toggle('on', S.manage);
+  $('toggleManage').innerHTML = S.manage ? 'เสร็จ ' + E('✅') : 'จัดการ ' + E('⚙️');
   $('chips').innerHTML = list.length ? list.map(function (n) {
-    var on = n === S.cat[S.tab];
-    return '<button type="button" class="chip' + (on ? ' on' : '') + '" aria-pressed="' + on + '" data-name="' + esc(n) + '">' + esc(n) + '</button>';
+    var on = !S.manage && n === S.cat[S.tab];
+    return '<button type="button" class="chip' + (on ? ' on' : '') + '" aria-pressed="' + on + '" data-name="' + esc(n) + '">' + esc(n) + (S.manage ? '<span class="x">✕</span>' : '') + '</button>';
   }).join('') : '<p class="empty">ยังไม่มีประเภท กด "+ เพิ่มประเภท" ได้เลย</p>';
+  $('hiddenBox').classList.toggle('hidden', !S.manage);
+  $('hiddenChips').innerHTML = hid.length ? hid.map(function (n) {
+    return '<button type="button" class="chip off" data-name="' + esc(n) + '">↩ ' + esc(n) + '</button>';
+  }).join('') : '<p class="empty" style="padding:0">ยังไม่มีประเภทที่ซ่อนไว้</p>';
 }
 function renderAccounts() {
   if (S.tab !== 'saving' && S.tab !== 'invest') return;
-  var list = S.data.cats['account_' + S.tab] || [];
+  var list = activeCats('account_' + S.tab);
+  var keep = $('account').value;
   $('accountLabel').textContent = S.tab === 'saving' ? 'เก็บเข้าบัญชี' : 'ลงทุนผ่าน';
-  $('account').innerHTML = list.map(function (n) { return '<option>' + esc(n) + '</option>'; }).join('') || '<option value="">-</option>';
+  $('account').innerHTML = list.map(function (n) { return '<option' + (n === keep ? ' selected' : '') + '>' + esc(n) + '</option>'; }).join('') || '<option value="">-</option>';
 }
 function renderStrip() {
-  var s = S.data.summary;
+  var s = S.D.summary;
   $('strip').innerHTML =
-    '<span>รายรับเดือนนี้ ' + E('💰') + ' <strong>' + baht(s.income) + '</strong></span>' +
+    '<span>รายรับ' + esc(S.D.monthLabel) + ' ' + E('💰') + ' <strong>' + baht(s.income) + '</strong></span>' +
     '<span>ใช้ไป ' + E('💸') + ' <strong>' + baht(s.expense) + '</strong></span>' +
     '<span>ออม + ลงทุน <strong>' + baht(s.saving + s.invest) + '</strong></span>' +
     '<span>คงเหลือใช้ได้ <strong style="color:var(--brown)">' + baht(s.balance) + ' ' + E('✨') + '</strong></span>';
 }
 function renderFixed() {
-  var f = S.data.fixed, total = 0;
+  var f = S.D.fixed, total = 0;
   f.forEach(function (x) { total += x.monthly; });
   $('fixTotal').textContent = baht(Math.round(total)) + ' / เดือน';
   $('fixList').innerHTML = f.length ? f.map(function (x) {
-    return '<li><div class="grow"><span style="font-size:15px;font-weight:500">' + esc(x.name) + '</span><span class="small">' + esc(x.meta) + '</span></div>' +
-      '<span style="font-size:15px;font-weight:600">' + baht(x.amount) + '</span><span class="badge' + (x.paid ? '' : ' due') + '">' + esc(x.status) + '</span></li>';
+    return '<li><div class="grow"><span style="font-size:15px;font-weight:500">' + esc(x.name) + '</span><span class="small">' + esc(x.meta) + ' · ' + baht(x.amount) + '</span></div>' +
+      '<span class="badge' + (x.paid ? '' : ' due') + '">' + esc(x.status) + '</span>' +
+      '<button type="button" class="mini" data-fix="' + esc(x.id) + '">ยกเลิก</button></li>';
   }).join('') : '<li class="empty">ยังไม่มีรายจ่ายประจำ</li>';
 }
 function renderKpis() {
-  var s = S.data.summary;
+  var s = S.D.summary;
   var chg = s.prevIncome > 0 ? Math.round((s.income - s.prevIncome) / s.prevIncome * 100) : null;
   var chgTxt = chg === null ? 'เดือนก่อนยังไม่มีข้อมูล' : (chg >= 0 ? '+' : '') + chg + '% จากเดือนก่อน';
   function card(sw, k, v, sub) { return '<div class="card kpi"><span class="k"><i class="sw ' + sw + '"></i>' + k + '</span><span class="v">' + v + '</span><span class="s">' + sub + '</span></div>'; }
@@ -399,7 +555,7 @@ function renderKpis() {
     '<div class="kpi dark"><span class="k">คงเหลือใช้ได้ ' + E('✨') + '</span><span class="v">' + baht(s.balance) + '</span><span class="s">รายรับ − รายจ่าย − ออม − ลงทุน</span></div>';
 }
 function renderChart() {
-  var ms = S.data.months, max = 0;
+  var ms = S.D.months, max = 0;
   ms.forEach(function (m) { max = Math.max(max, m.income, m.expense, m.saving, m.invest); });
   var H = 220;
   function h(v) { return max ? Math.max(v > 0 ? 3 : 0, Math.round(v / max * H)) : 0; }
@@ -413,47 +569,145 @@ function renderChart() {
   $('barLabels').innerHTML = ms.map(function (m) { return '<span>' + m.label + '</span>'; }).join('');
 }
 function renderBreakdown() {
-  var b = S.data.breakdown, max = b.length ? b[0].amount : 0;
-  $('bdTitle').innerHTML = 'รายจ่ายตามประเภท — ' + esc(S.data.monthLabel) + ' ' + E('🍰');
+  var b = S.D.breakdown, max = b.length ? b[0].amount : 0;
+  $('bdTitle').innerHTML = 'รายจ่ายตามประเภท — ' + esc(S.D.monthLabel) + ' ' + E('🍰');
   $('breakdown').innerHTML = b.length ? b.map(function (x) {
     return '<div class="bd"><span>' + esc(x.name) + '</span><div class="track"><div class="fill" style="width:' + Math.round(x.amount / max * 100) + '%"></div></div><span class="right">' + baht(x.amount) + '</span></div>';
   }).join('') : '<p class="empty">เดือนนี้ยังไม่มีรายจ่าย</p>';
 }
 function renderRecent() {
-  var r = S.data.recent;
+  var r = S.D.recent;
   var sign = { income: '+', expense: '−', saving: '', invest: '' };
   var short = { income: 'รายรับ', expense: 'รายจ่าย', saving: 'ออม', invest: 'ลงทุน' };
   $('recent').innerHTML = r.length ? r.map(function (x) {
     var note = [x.note, x.account, x.isFixed ? 'Fix cost' : ''].filter(Boolean).join(' · ');
-    return '<tr><td>' + thDate(x.date) + '</td><td><span class="kind ' + x.type + '">' + (short[x.type] || x.type) + '</span></td><td>' + esc(x.category) + '</td><td class="small">' + esc(note) + '</td><td class="right">' + sign[x.type] + baht(x.amount) + '</td></tr>';
-  }).join('') : '<tr><td colspan="5" class="empty">เดือนนี้ยังไม่มีรายการ</td></tr>';
+    return '<tr class="click" data-id="' + esc(x.id) + '"><td>' + thDate(x.date) + '</td><td><span class="kind ' + esc(x.type) + '">' + (short[x.type] || esc(x.type)) + '</span></td><td>' + esc(x.category) + '</td><td class="small">' + esc(note) + '</td><td class="right">' + (sign[x.type] || '') + baht(x.amount) + '</td><td class="ed">✏️</td></tr>';
+  }).join('') : '<tr><td colspan="6" class="empty">เดือนนี้ยังไม่มีรายการ</td></tr>';
 }
 
+/* ---------- บันทึกรายการใหม่ ---------- */
 function setTab(k) { S.tab = k; $('addbox').classList.remove('show'); renderTabs(); renderCats(); renderAccounts(); }
 function syncFix() { $('fixFields').classList.toggle('hidden', !$('isFix').checked); }
 
 function save() {
-  if (S.busy) return;
-  var amt = $('amount').value.trim();
+  if (!S.raw) return;
+  var amt = num($('amount').value);
   var cat = S.cat[S.tab];
-  if (!(Number(amt.replace(/,/g, '')) > 0)) { toast('กรุณาใส่จำนวนเงิน'); $('amount').focus(); return; }
+  if (!(amt > 0)) { toast('กรุณาใส่จำนวนเงิน'); $('amount').focus(); return; }
   if (!cat) { toast('กรุณาเลือกประเภท'); return; }
-  var p = {
-    type: S.tab, date: $('date').value || todayStr(), amount: amt, category: cat,
-    note: $('note').value.trim(), monthKey: S.month,
-    isFixed: S.tab === 'expense' && $('isFix').checked,
-    cycle: $('cycle').value, dueDay: $('dueDay').value,
-    account: (S.tab === 'saving' || S.tab === 'invest') ? $('account').value : ''
+  var t = {
+    id: uid(), type: S.tab, date: $('date').value || todayStr(), amount: amt, category: cat,
+    account: (S.tab === 'saving' || S.tab === 'invest') ? $('account').value : '',
+    isFixed: S.tab === 'expense' && $('isFix').checked, note: $('note').value.trim(), created: Date.now()
   };
-  S.busy = true; $('saveBtn').disabled = true; renderTabs();
-  api('addTransaction', p).then(function (d) {
-    $('saveBtn').disabled = false;
-    $('amount').value = ''; $('note').value = ''; $('isFix').checked = false; syncFix();
-    gotData(d);
-    toast('บันทึกแล้ว 🌷');
-  }).catch(fail);
+  var p = { id: t.id, type: t.type, date: t.date, amount: t.amount, category: t.category, account: t.account, isFixed: t.isFixed, note: t.note };
+  S.raw.tx.push(t);
+  if (t.isFixed) {
+    var f = { id: uid(), name: t.note || t.category, category: t.category, amount: t.amount, cycle: $('cycle').value,
+      dueDay: Math.min(Math.max(parseInt($('dueDay').value, 10) || Number(t.date.slice(8, 10)), 1), 31), start: t.date, last: t.date };
+    S.raw.fixed.push(f);
+    p.fixedId = f.id; p.cycle = f.cycle; p.dueDay = f.dueDay;
+  }
+  $('amount').value = ''; $('note').value = ''; $('isFix').checked = false; syncFix();
+  changed();
+  send('addTx', p);
+  var m = t.date.slice(0, 7);
+  toast(m === S.month ? 'บันทึกแล้ว 🌷' : 'บันทึกแล้ว 🌷 (อยู่ในเดือน' + TH_FULL[Number(m.slice(5, 7)) - 1] + ')');
 }
 
+/* ---------- แก้ไข / ลบรายการ ---------- */
+function fillEditCats(type, current, account) {
+  var cats = activeCats(type);
+  if (current && cats.indexOf(current) < 0) cats = [current].concat(cats);
+  $('eCat').innerHTML = cats.map(function (n) { return '<option' + (n === current ? ' selected' : '') + '>' + esc(n) + '</option>'; }).join('');
+  var hasAcc = type === 'saving' || type === 'invest';
+  $('eAccBox').classList.toggle('hidden', !hasAcc);
+  if (hasAcc) {
+    var accs = activeCats('account_' + type);
+    if (account && accs.indexOf(account) < 0) accs = [account].concat(accs);
+    $('eAccLabel').textContent = type === 'saving' ? 'เก็บเข้าบัญชี' : 'ลงทุนผ่าน';
+    $('eAcc').innerHTML = accs.map(function (n) { return '<option' + (n === account ? ' selected' : '') + '>' + esc(n) + '</option>'; }).join('') || '<option value="">-</option>';
+  }
+}
+function openEdit(id) {
+  var t = findTx(id); if (!t) return;
+  S.editId = id;
+  $('eType').innerHTML = ORDER.map(function (k) { return '<option value="' + k + '"' + (k === t.type ? ' selected' : '') + '>' + META[k].label + '</option>'; }).join('');
+  $('eDate').value = t.date;
+  $('eAmount').value = t.amount;
+  $('eNote').value = t.note || '';
+  fillEditCats(t.type, t.category, t.account);
+  resetDelete();
+  $('editor').classList.remove('hidden');
+}
+function closeEdit() { S.editId = null; $('editor').classList.add('hidden'); }
+function resetDelete() { var b = $('eDelete'); b.classList.remove('sure'); b.innerHTML = 'ลบรายการ ' + E('🗑️'); clearTimeout(resetDelete.t); }
+function saveEdit(e) {
+  e.preventDefault();
+  var t = findTx(S.editId); if (!t) { closeEdit(); return; }
+  var amt = num($('eAmount').value);
+  if (!(amt > 0)) { toast('กรุณาใส่จำนวนเงิน'); $('eAmount').focus(); return; }
+  if (!$('eCat').value) { toast('กรุณาเลือกประเภท'); return; }
+  t.type = $('eType').value;
+  t.date = $('eDate').value || t.date;
+  t.amount = amt;
+  t.category = $('eCat').value;
+  t.account = (t.type === 'saving' || t.type === 'invest') ? $('eAcc').value : '';
+  t.note = $('eNote').value.trim();
+  if (t.type !== 'expense') t.isFixed = false;
+  closeEdit(); changed();
+  send('updateTx', { id: t.id, type: t.type, date: t.date, amount: t.amount, category: t.category, account: t.account, note: t.note });
+  toast('แก้ไขแล้ว ✏️');
+}
+function deleteEdit() {
+  var b = $('eDelete');
+  if (!b.classList.contains('sure')) {
+    b.classList.add('sure'); b.innerHTML = 'แตะอีกครั้งเพื่อลบ';
+    resetDelete.t = setTimeout(resetDelete, 3000);
+    return;
+  }
+  var id = S.editId;
+  S.raw.tx = S.raw.tx.filter(function (t) { return t.id !== id; });
+  closeEdit(); changed();
+  send('deleteTx', { id: id });
+  toast('ลบแล้ว 🗑️');
+}
+
+/* ---------- รายจ่ายประจำ: ยกเลิก ---------- */
+function cancelFixed(btn) {
+  if (!btn.classList.contains('warn')) {
+    btn.classList.add('warn'); btn.textContent = 'ยืนยัน?';
+    setTimeout(function () { if (btn.isConnected) { btn.classList.remove('warn'); btn.textContent = 'ยกเลิก'; } }, 3000);
+    return;
+  }
+  var id = btn.dataset.fix;
+  var f = S.raw.fixed.filter(function (x) { return x.id === id; })[0];
+  S.raw.fixed = S.raw.fixed.filter(function (x) { return x.id !== id; });
+  changed();
+  send('setFixedActive', { id: id, active: false });
+  toast('ยกเลิก "' + (f ? f.name : '') + '" แล้ว 📌');
+}
+
+/* ---------- ประเภท: เพิ่ม / ซ่อน / กู้คืน ---------- */
+function setCatActive(type, name, active) {
+  var row = S.raw.cats.filter(function (c) { return c.type === type && c.name === name; })[0];
+  if (row) row.active = active;
+  changed();
+  send('setCategoryActive', { type: type, name: name, active: active });
+}
+function addCat() {
+  var name = $('newCat').value.trim(); if (!name) { $('newCat').focus(); return; }
+  var type = S.tab;
+  var row = S.raw.cats.filter(function (c) { return c.type === type && c.name === name; })[0];
+  if (row) row.active = true;
+  else S.raw.cats.push({ type: type, name: name, active: true, sort: catRows(type).length + 1 });
+  S.cat[type] = name; $('newCat').value = ''; $('addbox').classList.remove('show');
+  changed();
+  send('addCategory', { type: type, name: name });
+  toast('เพิ่มประเภทแล้ว 🏷️');
+}
+
+/* ---------- เริ่มทำงาน ---------- */
 document.addEventListener('DOMContentLoaded', function () {
   $('date').value = todayStr();
   $('dueDay').value = new Date().getDate();
@@ -462,28 +716,44 @@ document.addEventListener('DOMContentLoaded', function () {
     S.page = b.dataset.page; renderPage(); window.scrollTo({ top: 0, behavior: 'smooth' });
   });
   $('tabs').addEventListener('click', function (e) { var b = e.target.closest('button'); if (b) setTab(b.dataset.tab); });
-  $('chips').addEventListener('click', function (e) { var b = e.target.closest('.chip'); if (b) { S.cat[S.tab] = b.dataset.name; renderCats(); } });
-  $('toggleAdd').addEventListener('click', function () { $('addbox').classList.toggle('show'); if ($('addbox').classList.contains('show')) $('newCat').focus(); });
-  $('addCat').addEventListener('click', function () {
-    var name = $('newCat').value.trim(); if (!name) { $('newCat').focus(); return; }
-    var tab = S.tab;
-    api('addCategory', { type: tab, name: name }).then(function (c) {
-      S.data.cats = c; S.cat[tab] = name; $('newCat').value = ''; $('addbox').classList.remove('show');
-      renderCats(); toast('เพิ่มประเภทแล้ว 🏷️');
-    }).catch(fail);
+  $('chips').addEventListener('click', function (e) {
+    var b = e.target.closest('.chip'); if (!b) return;
+    if (S.manage) { setCatActive(S.tab, b.dataset.name, false); toast('ซ่อน "' + b.dataset.name + '" แล้ว'); }
+    else { S.cat[S.tab] = b.dataset.name; renderCats(); }
   });
-  $('newCat').addEventListener('keydown', function (e) { if (e.key === 'Enter') $('addCat').click(); });
+  $('hiddenChips').addEventListener('click', function (e) {
+    var b = e.target.closest('.chip'); if (!b) return;
+    setCatActive(S.tab, b.dataset.name, true); toast('กู้คืน "' + b.dataset.name + '" แล้ว');
+  });
+  $('toggleManage').addEventListener('click', function () { S.manage = !S.manage; $('addbox').classList.remove('show'); renderCats(); });
+  $('toggleAdd').addEventListener('click', function () { $('addbox').classList.toggle('show'); if ($('addbox').classList.contains('show')) $('newCat').focus(); });
+  $('addCat').addEventListener('click', addCat);
+  $('newCat').addEventListener('keydown', function (e) { if (e.key === 'Enter') addCat(); });
   $('isFix').addEventListener('change', syncFix);
   $('date').addEventListener('change', function () { var d = $('date').value; if (d) $('dueDay').value = Number(d.slice(8, 10)); });
   $('saveBtn').addEventListener('click', save);
-  $('month').addEventListener('change', function () { load($('month').value); });
+  $('month').addEventListener('change', function () { S.month = $('month').value; renderAll(); });
   $('addFixed').addEventListener('click', function () {
     setTab('expense'); $('isFix').checked = true; syncFix();
     $('form-h').scrollIntoView({ behavior: 'smooth', block: 'start' }); $('amount').focus();
   });
+  $('fixList').addEventListener('click', function (e) { var b = e.target.closest('[data-fix]'); if (b) cancelFixed(b); });
+  $('recent').addEventListener('click', function (e) { var tr = e.target.closest('tr[data-id]'); if (tr) openEdit(tr.dataset.id); });
+  $('editForm').addEventListener('submit', saveEdit);
+  $('eType').addEventListener('change', function () { fillEditCats($('eType').value, '', ''); });
+  $('eCancel').addEventListener('click', closeEdit);
+  $('eDelete').addEventListener('click', deleteEdit);
+  $('editor').addEventListener('click', function (e) { if (e.target === $('editor')) closeEdit(); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && S.editId) closeEdit(); });
+  window.addEventListener('beforeunload', function (e) { if (S.pending > 0) { e.preventDefault(); e.returnValue = ''; } });
   $('lockForm').addEventListener('submit', unlock);
   $('lockBtn').addEventListener('click', lockNow);
-  if (CFG.pin) load(''); else showLock('');
+
+  if (!CFG.pin) { showLock(''); return; }
+  // เปิดแอป: แสดงข้อมูลที่จำไว้ทันที แล้วค่อยอัปเดตจากชีต
+  try { var c = JSON.parse(localStorage.getItem(CACHE_KEY) || 'null'); if (c && c.tx) setRaw(c); } catch (e) {}
+  if (!S.raw) $('app').classList.add('loading');
+  refresh();
 });
 </script>
 </body>
