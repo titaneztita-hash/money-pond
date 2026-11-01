@@ -89,7 +89,14 @@ input[type=date]::-webkit-date-and-time-value{text-align:left;margin:0}
 .legend span{display:flex;align-items:center;gap:6px}
 .chart{overflow-x:auto}
 .bars{min-width:540px;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px;align-items:end;height:240px;border-bottom:1px solid var(--sand);padding:0 6px}
-.bar-g{display:flex;align-items:flex-end;justify-content:center;gap:4px;height:100%}
+.bar-g{display:flex;align-items:flex-end;justify-content:center;gap:4px;height:100%;border:0;background:transparent;padding:0 0 0;border-radius:10px 10px 0 0;cursor:pointer}
+.bar-g.on{background:rgba(102,73,48,.08)}
+.labels button{border:0;background:transparent;padding:4px 0;border-radius:999px;font-size:13px;color:#4A3426;cursor:pointer}
+.labels button.on{background:var(--brown);color:#fff;font-weight:600}
+.cinfo{display:flex;flex-direction:column;gap:10px;padding:14px;border-radius:14px;background:#F0F7E8}
+.cgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 16px}
+.cgrid span{display:flex;align-items:center;gap:8px;font-size:14px;color:#4A3426}
+.cgrid strong{margin-left:auto;color:var(--ink)}
 .bar{width:16px;border-radius:5px 5px 0 0}
 .bar.inc{background:var(--brown)}.bar.exp{background:var(--mid)}.bar.sav{background:var(--sand);box-shadow:inset 0 0 0 1px #B5A391}.bar.inv{background:var(--peach);box-shadow:inset 0 0 0 1px #D9B08C}
 .labels{min-width:540px;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px;padding:8px 6px 0;font-size:13px;text-align:center;color:#4A3524}
@@ -241,6 +248,7 @@ td.ed{width:28px;text-align:center;color:var(--mid);padding-left:0}
       <div class="bars" id="bars" role="img" aria-label="กราฟแท่งรายรับ รายจ่าย ออม และลงทุน 6 เดือนล่าสุด"></div>
       <div class="labels" id="barLabels"></div>
     </div>
+    <div class="cinfo" id="chartInfo" aria-live="polite"></div>
     <div style="display:flex;flex-direction:column;gap:12px">
       <h3 style="margin:0;font-size:16px;font-weight:600" id="bdTitle">รายจ่ายตามประเภท</h3>
       <div id="breakdown" style="display:flex;flex-direction:column;gap:12px"></div>
@@ -311,7 +319,7 @@ var CYC = { monthly: { months: 1, label: 'ทุกเดือน' }, quarterly
 var CACHE_KEY = 'mp_cache_v2';
 
 // raw = ข้อมูลดิบจากชีต, D = ค่าที่คำนวณแล้วสำหรับเดือนที่เลือก
-var S = { raw: null, D: null, page: 'entry', tab: 'expense', cat: {}, month: '', manage: false, editId: null, pending: 0, synced: false };
+var S = { chartSel: 5, raw: null, D: null, page: 'entry', tab: 'expense', cat: {}, month: '', manage: false, editId: null, pending: 0, synced: false };
 
 var CFG = { url: String(window.MONEY_POND_API || '').trim(), pin: '' };
 try { CFG.pin = localStorage.getItem('mp_pin') || ''; } catch (e) {}
@@ -443,7 +451,7 @@ function derive() {
   tx.forEach(function (t) { var k = t.date.slice(0, 7); if (k.slice(0, 4) === key.slice(0, 4) && k <= key && ytd[t.type] !== undefined) ytd[t.type] += t.amount; });
 
   var months = [];
-  for (var i = 5; i >= 0; i--) { var k = shiftKey(key, -i), v = sum(k); months.push({ label: TH_SHORT[Number(k.slice(5, 7)) - 1], income: v.income, expense: v.expense, saving: v.saving, invest: v.invest }); }
+  for (var i = 5; i >= 0; i--) { var k = shiftKey(key, -i), v = sum(k); months.push({ key: k, label: TH_SHORT[Number(k.slice(5, 7)) - 1], income: v.income, expense: v.expense, saving: v.saving, invest: v.invest }); }
 
   var bd = {};
   tx.forEach(function (t) { if (t.date.slice(0, 7) === key && t.type === 'expense') bd[t.category] = (bd[t.category] || 0) + t.amount; });
@@ -559,15 +567,28 @@ function renderChart() {
   ms.forEach(function (m) { max = Math.max(max, m.income, m.expense, m.saving, m.invest); });
   var H = 220;
   function h(v) { return max ? Math.max(v > 0 ? 3 : 0, Math.round(v / max * H)) : 0; }
-  $('bars').innerHTML = ms.map(function (m) {
-    return '<div class="bar-g" title="' + m.label + '">' +
+  if (!(S.chartSel >= 0 && S.chartSel < ms.length)) S.chartSel = ms.length - 1;
+  $('bars').innerHTML = ms.map(function (m, i) {
+    return '<button type="button" class="bar-g' + (i === S.chartSel ? ' on' : '') + '" data-i="' + i + '" aria-label="ดูตัวเลขเดือน ' + m.label + '">' +
       '<div class="bar inc" style="height:' + h(m.income) + 'px" title="รายรับ ' + baht(m.income) + '"></div>' +
       '<div class="bar exp" style="height:' + h(m.expense) + 'px" title="รายจ่าย ' + baht(m.expense) + '"></div>' +
       '<div class="bar sav" style="height:' + h(m.saving) + 'px" title="ออม ' + baht(m.saving) + '"></div>' +
-      '<div class="bar inv" style="height:' + h(m.invest) + 'px" title="ลงทุน ' + baht(m.invest) + '"></div></div>';
+      '<div class="bar inv" style="height:' + h(m.invest) + 'px" title="ลงทุน ' + baht(m.invest) + '"></div></button>';
   }).join('');
-  $('barLabels').innerHTML = ms.map(function (m) { return '<span>' + m.label + '</span>'; }).join('');
+  $('barLabels').innerHTML = ms.map(function (m, i) { return '<button type="button" data-i="' + i + '" class="' + (i === S.chartSel ? 'on' : '') + '">' + m.label + '</button>'; }).join('');
+  var m = ms[S.chartSel];
+  var left = m.income - m.expense - m.saving - m.invest;
+  $('chartInfo').innerHTML =
+    '<div class="between"><strong style="font-size:15px">' + TH_FULL[Number(m.key.slice(5, 7)) - 1] + ' ' + (Number(m.key.slice(0, 4)) + 543) + '</strong>' +
+    '<span class="small">คงเหลือ <strong style="color:' + (left < 0 ? '#8A3A0E' : 'var(--brown)') + '">' + baht(left) + '</strong></span></div>' +
+    '<div class="cgrid">' +
+    '<span><i class="sw inc"></i>รายรับ<strong>' + baht(m.income) + '</strong></span>' +
+    '<span><i class="sw exp"></i>รายจ่าย<strong>' + baht(m.expense) + '</strong></span>' +
+    '<span><i class="sw sav"></i>ออม<strong>' + baht(m.saving) + '</strong></span>' +
+    '<span><i class="sw inv"></i>ลงทุน<strong>' + baht(m.invest) + '</strong></span></div>' +
+    (m.key !== S.month ? '<button type="button" class="link" data-goto="' + m.key + '" style="align-self:flex-start;border:0;background:transparent;padding:0;color:#2F5D87;font-weight:600;font-size:13px;cursor:pointer">ดูสรุปทั้งหมดของเดือนนี้ →</button>' : '');
 }
+function pickChart(e) { var b = e.target.closest('[data-i]'); if (!b) return; S.chartSel = Number(b.dataset.i); renderChart(); }
 function renderBreakdown() {
   var b = S.D.breakdown, max = b.length ? b[0].amount : 0;
   $('bdTitle').innerHTML = 'รายจ่ายตามประเภท — ' + esc(S.D.monthLabel) + ' ' + E('🍰');
@@ -732,7 +753,10 @@ document.addEventListener('DOMContentLoaded', function () {
   $('isFix').addEventListener('change', syncFix);
   $('date').addEventListener('change', function () { var d = $('date').value; if (d) $('dueDay').value = Number(d.slice(8, 10)); });
   $('saveBtn').addEventListener('click', save);
-  $('month').addEventListener('change', function () { S.month = $('month').value; renderAll(); });
+  $('month').addEventListener('change', function () { S.month = $('month').value; S.chartSel = 5; renderAll(); });
+  $('bars').addEventListener('click', pickChart);
+  $('barLabels').addEventListener('click', pickChart);
+  $('chartInfo').addEventListener('click', function (e) { var b = e.target.closest('[data-goto]'); if (!b) return; S.month = b.dataset.goto; S.chartSel = 5; renderAll(); window.scrollTo({ top: 0, behavior: 'smooth' }); });
   $('addFixed').addEventListener('click', function () {
     setTab('expense'); $('isFix').checked = true; syncFix();
     $('form-h').scrollIntoView({ behavior: 'smooth', block: 'start' }); $('amount').focus();
