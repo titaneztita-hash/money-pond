@@ -131,6 +131,16 @@ td.ed{width:28px;text-align:center;color:var(--mid);padding-left:0}
 .sheet .h2{text-align:center}
 .danger{height:46px;border:1px solid #D9A58C;border-radius:12px;background:#fff;color:#8A3A0E;font-weight:600}
 .danger.sure{background:#8A3A0E;border-color:#8A3A0E;color:#fff}
+.kind.cardpay{background:#DCEAF4;color:#1F3F5B}
+.money{display:flex;flex-direction:column;gap:6px;padding:16px;border-radius:16px;background:var(--brown);color:#fff}
+.money .v{font-size:28px;font-weight:700}
+.money .s{font-size:12px;color:#F1E4D8}
+.cardlist{list-style:none;margin:0;padding:0}
+.cardlist li{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
+.cardlist li:last-child{border-bottom:0}
+.badge.soon{background:#F7D9C4;color:#8A3A0E}
+.setrow{display:flex;flex-direction:column;gap:8px;padding:12px;border:1px solid var(--line);border-radius:14px;background:#fff}
+.setrow input[type=text],.setrow input[type=number]{height:42px}
 @media (max-width:480px){h1{font-size:27px}.hero-gif{flex-basis:100%;min-height:180px}.card{padding:18px}.kpi .v{font-size:24px}
 .bars,.labels{min-width:0;gap:6px;padding-left:2px;padding-right:2px}.bar{width:9px}.bar-g{gap:2px}
 .tabs button{font-size:13px}.bd{grid-template-columns:88px minmax(0,1fr) 72px}}
@@ -207,6 +217,10 @@ td.ed{width:28px;text-align:center;color:var(--mid);padding-left:0}
           <p class="hint" style="grid-column:1/-1">ใส่ชื่อในช่องหมายเหตุ เช่น "แอปดูหนัง" ระบบจะลงรายการนี้ให้อัตโนมัติทุกรอบ ไม่ต้องกรอกซ้ำ</p>
         </div>
       </div>
+      <div class="field" id="payBox">
+        <span class="lbl">จ่ายด้วย <span class="emo">💳</span></span>
+        <div class="chips" id="payChips"></div>
+      </div>
       <div class="field hidden" id="accountBox">
         <label for="account" id="accountLabel">เก็บเข้าบัญชี</label>
         <select id="account"></select>
@@ -233,6 +247,7 @@ td.ed{width:28px;text-align:center;color:var(--mid);padding-left:0}
 <!-- ===== แท็บ 2: สรุปผล ===== -->
 <div id="pageSummary" class="hidden" style="flex-direction:column;gap:18px">
   <section class="kpis" id="kpis" aria-label="สรุปเดือนนี้"></section>
+  <section class="card" id="moneyCard" aria-labelledby="money-h" style="display:flex;flex-direction:column;gap:14px"></section>
 
   <section class="card" aria-labelledby="chart-h" style="display:flex;flex-direction:column;gap:20px">
     <div class="between" style="flex-wrap:wrap">
@@ -280,14 +295,54 @@ td.ed{width:28px;text-align:center;color:var(--mid);padding-left:0}
       <div class="field"><label for="eDate">วันที่</label><input id="eDate" type="date"></div>
     </div>
     <div class="field"><label for="eAmount">จำนวนเงิน (บาท)</label><input id="eAmount" type="text" inputmode="decimal" style="font-weight:600;font-size:17px"></div>
-    <div class="field"><label for="eCat">ประเภท</label><select id="eCat"></select></div>
+    <div class="field"><label for="eCat" id="eCatLabel">ประเภท</label><select id="eCat"></select></div>
     <div class="field hidden" id="eAccBox"><label for="eAcc" id="eAccLabel">บัญชี</label><select id="eAcc"></select></div>
+    <div class="field hidden" id="ePayBox"><label for="ePay">จ่ายด้วย</label><select id="ePay"></select></div>
     <div class="field"><label for="eNote">หมายเหตุ</label><input id="eNote" type="text"></div>
     <button type="submit" class="btn save">บันทึกการแก้ไข <span class="emo">🌷</span></button>
     <div class="grid2">
       <button type="button" class="outline" id="eCancel">ปิด</button>
       <button type="button" class="danger" id="eDelete">ลบรายการ <span class="emo">🗑️</span></button>
     </div>
+  </form>
+</div>
+
+<div class="lock hidden" id="payModal">
+  <form class="card lockcard sheet" id="payForm" autocomplete="off">
+    <h2 class="h2">จ่ายบิลบัตร <span class="emo">💳</span></h2>
+    <p class="sub" id="payInfo" style="margin:0"></p>
+    <div class="grid2">
+      <div class="field"><label for="pAmount">จำนวนที่จ่าย (บาท)</label><input id="pAmount" type="text" inputmode="decimal" style="font-weight:600;font-size:17px"></div>
+      <div class="field"><label for="pDate">วันที่จ่าย</label><input id="pDate" type="date"></div>
+    </div>
+    <p class="hint">ยอดนี้ไม่นับเป็นรายจ่ายซ้ำ (นับไปแล้วตอนรูดบัตร) แค่หักออกจากเงินในบัญชี และลดยอดบัตรรอจ่าย</p>
+    <button type="submit" class="btn save">บันทึกการจ่ายบิล <span class="emo">🌷</span></button>
+    <button type="button" class="outline" id="pCancel">ปิด</button>
+  </form>
+</div>
+
+<div class="lock hidden" id="setupModal">
+  <form class="card lockcard sheet" id="setupForm" autocomplete="off" style="max-width:520px">
+    <h2 class="h2">ตั้งค่าเงินและบัตร <span class="emo">⚙️</span></h2>
+    <div class="field" style="gap:10px">
+      <span class="lbl">ยอดเงินรวมทุกบัญชี (ยอดตั้งต้น)</span>
+      <div class="grid2">
+        <div class="field"><label for="sBal" class="small">จำนวนเงิน (บาท)</label><input id="sBal" type="text" inputmode="decimal" placeholder="เช่น 45,000"></div>
+        <div class="field"><label for="sDate" class="small">ณ วันที่</label><input id="sDate" type="date"></div>
+      </div>
+      <p class="hint">เปิดแอปธนาคารทุกบัญชี บวกยอดรวมกัน แล้วใส่ตรงนี้ · ยอดนี้ถือว่ารวมทุกอย่างถึงสิ้นวันที่เลือกแล้ว แอปจะนับเฉพาะรายการ<b>หลัง</b>วันนั้น (แนะนำให้ตั้งตอนลงรายการของวันนั้นครบแล้ว)</p>
+    </div>
+    <div class="field" style="gap:10px">
+      <span class="lbl">บัตรเครดิต</span>
+      <div id="sCards" style="display:flex;flex-direction:column;gap:10px"></div>
+      <div class="addbox show" style="margin:0">
+        <div class="field" style="flex:1 1 auto"><label for="sNewCard" class="small">เพิ่มบัตรใหม่</label><input id="sNewCard" type="text" placeholder="ชื่อบัตร"></div>
+        <button type="button" class="btn" id="sAddCard">เพิ่ม</button>
+      </div>
+      <p class="hint">วันครบกำหนด = วันที่ต้องจ่ายบิลทุกเดือน (ไม่ใส่ก็ได้) · ยอดค้างตอนเริ่ม = ยอดบัตรที่ยังไม่ได้จ่าย ณ วันตั้งต้น (ดูได้จากแอปบัตร)</p>
+    </div>
+    <button type="submit" class="btn save">บันทึก <span class="emo">🌷</span></button>
+    <button type="button" class="outline" id="sCancel">ปิด</button>
   </form>
 </div>
 
@@ -310,7 +365,8 @@ var META = {
   income: { label: 'รายรับ', emo: '💰' },
   expense: { label: 'รายจ่าย', emo: '💸' },
   saving: { label: 'เงินออม', emo: '🐷' },
-  invest: { label: 'ลงทุน', emo: '🌱' }
+  invest: { label: 'ลงทุน', emo: '🌱' },
+  cardpay: { label: 'จ่ายบิลบัตร', emo: '💳' }
 };
 var ORDER = ['income', 'expense', 'saving', 'invest'];
 var TH_SHORT = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
@@ -319,10 +375,10 @@ var CYC = { monthly: { months: 1, label: 'ทุกเดือน' }, quarterly
 var CACHE_KEY = 'mp_cache_v2';
 
 // raw = ข้อมูลดิบจากชีต, D = ค่าที่คำนวณแล้วสำหรับเดือนที่เลือก
-var S = { chartSel: 5, raw: null, D: null, page: 'entry', tab: 'expense', cat: {}, month: '', manage: false, editId: null, pending: 0, synced: false };
+var S = { pay: '', setupCards: null, chartSel: 5, raw: null, D: null, page: 'entry', tab: 'expense', cat: {}, month: '', manage: false, editId: null, pending: 0, synced: false };
 
 var CFG = { url: String(window.MONEY_POND_API || '').trim(), pin: '' };
-try { CFG.pin = localStorage.getItem('mp_pin') || ''; } catch (e) {}
+try { CFG.pin = localStorage.getItem('mp_pin') || ''; S.pay = localStorage.getItem('mp_pay') || ''; } catch (e) {}
 
 /* ---------- เชื่อมต่อ Apps Script ---------- */
 function api(action, payload) {
@@ -468,10 +524,42 @@ function derive() {
     var c = CYC[f.cycle] || CYC.monthly, next = nextDue(f), status = 'รอตัด', paid = false;
     if (f.last && f.last.slice(0, 7) === cur) { status = 'ตัดแล้ว'; paid = true; }
     else if (next && ymdOf(next).slice(0, 7) !== cur) { status = 'รอบหน้า ' + next.getDate() + ' ' + TH_SHORT[next.getMonth()]; paid = true; }
-    return { id: f.id, name: f.name, amount: f.amount, meta: c.label + ' · วันที่ ' + f.dueDay, status: status, paid: paid, monthly: f.amount / c.months };
+    return { id: f.id, name: f.name, amount: f.amount, meta: c.label + ' · วันที่ ' + f.dueDay + (f.payWith ? ' · ' + payLabel(f.payWith) : ''), status: status, paid: paid, monthly: f.amount / c.months };
   });
 
+  // เงินในบัญชีรวม (ทาง A: รวมทุกบัญชีเป็นก้อนเดียว) และยอดบัตรรอจ่าย
+  var st = S.raw.settings || {}, od = st.openingDate || '', td = todayStr();
+  var bank = null;
+  if (st.openingBalance !== null && st.openingBalance !== undefined && od) {
+    bank = Number(st.openingBalance) || 0;
+    tx.forEach(function (t) {
+      if (t.date <= od || t.date > td) return; // ยอดตั้งต้นรวมรายการของวันนั้นไว้แล้ว
+      if (t.type === 'income') bank += t.amount;
+      else if (t.type === 'expense' && !isCard(t.payWith)) bank -= t.amount; // เงินสดและโอนหักจากเงินในบัญชีรวม
+      else if (t.type === 'invest' || t.type === 'cardpay') bank -= t.amount;
+    });
+  }
+  var cards = catRows('card').map(function (c) {
+    var owed = Number(c.opening) || 0;
+    tx.forEach(function (t) {
+      if ((od && t.date <= od) || t.date > td) return;
+      if (t.type === 'expense' && t.payWith === c.name) owed += t.amount;
+      else if (t.type === 'cardpay' && t.category === c.name) owed -= t.amount;
+    });
+    owed = Math.round(owed * 100) / 100;
+    var due = null, days = null;
+    if (c.dueDay) {
+      var now = new Date(), y = now.getFullYear(), m = now.getMonth();
+      var make = function (yy, mm) { return new Date(yy, mm, Math.min(c.dueDay, new Date(yy, mm + 1, 0).getDate())); };
+      due = make(y, m); if (ymdOf(due) < td) due = make(y, m + 1);
+      days = Math.round((new Date(ymdOf(due) + 'T00:00') - new Date(td + 'T00:00')) / 86400000);
+    }
+    return { name: c.name, active: c.active, dueDay: c.dueDay, opening: c.opening, owed: owed, due: due, days: days };
+  }).filter(function (c) { return c.active || Math.abs(c.owed) > 0.004; });
+  var owedTotal = 0; cards.forEach(function (c) { owedTotal += c.owed; });
+
   S.D = {
+    bank: bank, openingDate: od, openingBalance: st.openingBalance, cards: cards, owedTotal: owedTotal,
     monthLabel: TH_FULL[Number(key.slice(5, 7)) - 1],
     summary: { income: s.income, expense: s.expense, saving: s.saving, invest: s.invest, fixed: s.fixed, variable: s.expense - s.fixed,
       balance: s.income - s.expense - s.saving - s.invest, prevIncome: prev.income, ytdSaving: ytd.saving, ytdInvest: ytd.invest },
@@ -483,7 +571,7 @@ function derive() {
 function renderAll() {
   if (!S.raw) return;
   derive();
-  renderPage(); renderStatus(); renderMonth(); renderTabs(); renderCats(); renderAccounts(); renderStrip(); renderFixed(); renderKpis(); renderChart(); renderBreakdown(); renderRecent();
+  renderPage(); renderStatus(); renderMonth(); renderTabs(); renderCats(); renderAccounts(); renderPay(); renderStrip(); renderFixed(); renderKpis(); renderMoney(); renderChart(); renderBreakdown(); renderRecent();
 }
 function renderStatus() {
   var el = $('status');
@@ -509,6 +597,20 @@ function renderTabs() {
   $('saveBtn').innerHTML = 'บันทึก' + META[S.tab].label + ' ' + E('🌷');
   $('fixbox').classList.toggle('hidden', S.tab !== 'expense');
   $('accountBox').classList.toggle('hidden', S.tab !== 'saving' && S.tab !== 'invest');
+  $('payBox').classList.toggle('hidden', S.tab !== 'expense');
+}
+var NONCARD = ['เงินสด', 'โอน'];
+function cardNames() { return S.raw ? activeCats('card') : []; }
+function isCard(p) { return !!p && NONCARD.indexOf(p) < 0 && S.raw.cats.some(function (c) { return c.type === 'card' && c.name === p; }); }
+function payLabel(p) { return !p ? '' : isCard(p) ? 'บัตร ' + p : p; }
+function renderPay() {
+  var list = cardNames();
+  if (NONCARD.indexOf(S.pay) < 0 && list.indexOf(S.pay) < 0) S.pay = 'โอน';
+  var opts = [['เงินสด', 'เงินสด 💵'], ['โอน', 'โอน 📲']].concat(list.map(function (n) { return [n, n]; }));
+  $('payChips').innerHTML = opts.map(function (o) {
+    var on = o[0] === S.pay;
+    return '<button type="button" class="chip' + (on ? ' on' : '') + '" aria-pressed="' + on + '" data-pay="' + esc(o[0]) + '">' + esc(o[1]) + '</button>';
+  }).join('');
 }
 function renderCats() {
   if (!S.raw) return;
@@ -538,6 +640,7 @@ function renderStrip() {
     '<span>รายรับ' + esc(S.D.monthLabel) + ' ' + E('💰') + ' <strong>' + baht(s.income) + '</strong></span>' +
     '<span>ใช้ไป ' + E('💸') + ' <strong>' + baht(s.expense) + '</strong></span>' +
     '<span>ออม + ลงทุน <strong>' + baht(s.saving + s.invest) + '</strong></span>' +
+    (S.D.owedTotal > 0.004 ? '<span>บัตรรอจ่าย ' + E('💳') + ' <strong>' + baht(S.D.owedTotal) + '</strong></span>' : '') +
     '<span>คงเหลือใช้ได้ <strong style="color:var(--brown)">' + baht(s.balance) + ' ' + E('✨') + '</strong></span>';
 }
 function renderFixed() {
@@ -561,6 +664,93 @@ function renderKpis() {
     card('sav', 'เก็บเข้าธนาคาร ' + E('🏦'), baht(s.saving), 'สะสมทั้งปี ' + baht(s.ytdSaving)) +
     card('inv', 'เก็บเพื่อลงทุน ' + E('🌱'), baht(s.invest), 'สะสมทั้งปี ' + baht(s.ytdInvest)) +
     '<div class="kpi dark"><span class="k">คงเหลือใช้ได้ ' + E('✨') + '</span><span class="v">' + baht(s.balance) + '</span><span class="s">รายรับ − รายจ่าย − ออม − ลงทุน</span></div>';
+}
+function renderMoney() {
+  var D = S.D, h = '<div class="between"><h2 id="money-h" class="h2">เงินในบัญชีและบัตร ' + E('💳') + '</h2><button type="button" class="ghost" data-setup="1">ตั้งค่า ' + E('⚙️') + '</button></div>';
+  if (D.bank === null) {
+    h += '<div class="fixbox" style="gap:8px"><strong>ยังไม่ได้ตั้งยอดเงินตั้งต้น</strong><span class="small">ใส่ยอดรวมทุกบัญชีครั้งเดียว แอปจะคำนวณ "เงินในบัญชีตอนนี้" ให้ตรงกับธนาคาร</span>' +
+      '<button type="button" class="btn" data-setup="1" style="align-self:flex-start">ตั้งยอดเงินตั้งต้น</button></div>';
+  } else {
+    h += '<div class="money"><span style="font-size:13px;color:var(--peach)">เงินในบัญชีรวม ณ วันนี้ ' + E('🏦') + '</span><span class="v">' + baht(D.bank) + '</span>' +
+      '<span class="s">ตั้งต้น ' + baht(D.openingBalance) + ' เมื่อ ' + thDate(D.openingDate) + ' · ยังไม่หักยอดที่ค้างในบัตร</span></div>';
+  }
+  h += '<ul class="cardlist">' + (D.cards.length ? D.cards.map(function (c) {
+    var dueTxt = c.due ? 'ครบกำหนด ' + c.due.getDate() + ' ' + TH_SHORT[c.due.getMonth()] + (c.days === 0 ? ' (วันนี้)' : ' (อีก ' + c.days + ' วัน)') : 'ยังไม่ได้ใส่วันครบกำหนด';
+    var soon = c.due && c.days <= 3 && c.owed > 0.004;
+    return '<li><div class="grow"><span style="font-size:15px;font-weight:600">' + esc(c.name) + '</span><span class="small">' + (c.owed > 0.004 ? dueTxt : c.owed < -0.004 ? 'จ่ายเกินยอดที่บันทึกไว้' : 'ไม่มียอดค้าง') + '</span></div>' +
+      (soon ? '<span class="badge soon">ใกล้ครบกำหนด</span>' : '') +
+      '<span style="font-size:15px;font-weight:600;white-space:nowrap">' + baht(c.owed) + '</span>' +
+      '<button type="button" class="mini" data-paycard="' + esc(c.name) + '">จ่ายบิล</button></li>';
+  }).join('') : '<li class="empty">ยังไม่มีบัตร กด "ตั้งค่า" เพื่อเพิ่ม</li>') + '</ul>';
+  if (D.cards.length) h += '<div class="between" style="border-top:1px solid var(--line);padding-top:12px"><span class="small">บัตรรอจ่ายรวม</span><strong>' + baht(D.owedTotal) + '</strong></div>';
+  $('moneyCard').innerHTML = h;
+}
+function openPay(name) {
+  var c = S.D.cards.filter(function (x) { return x.name === name; })[0];
+  S.payCard = name;
+  $('payInfo').textContent = 'บัตร ' + name + ' · ยอดรอจ่ายที่บันทึกไว้ ' + baht(c ? c.owed : 0);
+  $('pAmount').value = c && c.owed > 0 ? c.owed : '';
+  $('pDate').value = todayStr();
+  $('payModal').classList.remove('hidden');
+}
+function savePay(e) {
+  e.preventDefault();
+  var amt = num($('pAmount').value);
+  if (!(amt > 0)) { toast('กรุณาใส่จำนวนเงิน'); $('pAmount').focus(); return; }
+  var t = { id: uid(), type: 'cardpay', date: $('pDate').value || todayStr(), amount: amt, category: S.payCard, account: '', isFixed: false, note: 'จ่ายบิลบัตร', payWith: S.payCard, created: Date.now() };
+  S.raw.tx.push(t);
+  $('payModal').classList.add('hidden'); changed();
+  send('addTx', { id: t.id, type: t.type, date: t.date, amount: t.amount, category: t.category, note: t.note, payWith: t.payWith });
+  toast('บันทึกจ่ายบิล ' + S.payCard + ' แล้ว 💳');
+}
+function openSetup() {
+  var st = S.raw.settings || {};
+  $('sBal').value = st.openingBalance === null || st.openingBalance === undefined ? '' : st.openingBalance;
+  $('sDate').value = st.openingDate || todayStr();
+  S.setupCards = catRows('card').map(function (c) { return { name: c.name, dueDay: c.dueDay || '', opening: c.opening || '', active: c.active, isNew: false }; });
+  renderSetupCards();
+  $('setupModal').classList.remove('hidden');
+}
+function readSetupCards() {
+  document.querySelectorAll('#sCards [data-i]').forEach(function (row) {
+    var c = S.setupCards[Number(row.dataset.i)];
+    c.dueDay = row.querySelector('.sDue').value; c.opening = row.querySelector('.sOpen').value; c.active = row.querySelector('.sAct').checked;
+  });
+}
+function renderSetupCards() {
+  $('sCards').innerHTML = S.setupCards.map(function (c, i) {
+    return '<div class="setrow" data-i="' + i + '"><div class="between"><strong style="font-size:15px">' + esc(c.name) + '</strong>' +
+      '<label class="check" style="font-size:13px;flex:none;white-space:nowrap;gap:6px;padding-right:2px"><input type="checkbox" class="sAct" style="width:20px;height:20px"' + (c.active ? ' checked' : '') + '> ใช้อยู่</label></div>' +
+      '<div class="grid2"><div class="field"><label class="small" for="sd' + i + '">ครบกำหนดทุกวันที่</label><input id="sd' + i + '" class="sDue" type="number" min="1" max="31" inputmode="numeric" value="' + esc(c.dueDay) + '" placeholder="ไม่ใส่ก็ได้"></div>' +
+      '<div class="field"><label class="small" for="so' + i + '">ยอดค้างตอนเริ่ม</label><input id="so' + i + '" class="sOpen" type="text" inputmode="decimal" value="' + esc(c.opening) + '" placeholder="0"></div></div></div>';
+  }).join('') || '<p class="empty">ยังไม่มีบัตร</p>';
+}
+function addSetupCard() {
+  var n = $('sNewCard').value.trim(); if (!n) { $('sNewCard').focus(); return; }
+  readSetupCards();
+  if (NONCARD.indexOf(n) >= 0) { toast('ใช้ชื่อนี้ไม่ได้ ลองตั้งชื่ออื่น'); return; }
+  if (S.setupCards.some(function (c) { return c.name === n; })) { toast('มีบัตรชื่อนี้แล้ว'); return; }
+  S.setupCards.push({ name: n, dueDay: '', opening: '', active: true, isNew: true });
+  $('sNewCard').value = ''; renderSetupCards();
+}
+function saveSetup(e) {
+  e.preventDefault();
+  readSetupCards();
+  var balRaw = $('sBal').value.trim(), bal = balRaw === '' ? null : num(balRaw);
+  if (balRaw !== '' && isNaN(bal)) { toast('ยอดเงินไม่ถูกต้อง'); $('sBal').focus(); return; }
+  var date = $('sDate').value || todayStr();
+  S.raw.settings = { openingBalance: bal, openingDate: bal === null ? '' : date };
+  send('setSettings', { openingBalance: bal === null ? '' : bal, openingDate: bal === null ? '' : date });
+  S.setupCards.forEach(function (c) {
+    var due = Math.min(Math.max(parseInt(c.dueDay, 10) || 0, 0), 31), open = num(c.opening) || 0;
+    var row = S.raw.cats.filter(function (x) { return x.type === 'card' && x.name === c.name; })[0];
+    var changedCard = !row || row.dueDay !== due || (row.opening || 0) !== open || row.active !== c.active;
+    if (!row) { row = { type: 'card', name: c.name, sort: catRows('card').length + 1 }; S.raw.cats.push(row); }
+    row.dueDay = due; row.opening = open; row.active = c.active;
+    if (changedCard) send('saveCard', { name: c.name, dueDay: due, opening: open, active: c.active });
+  });
+  $('setupModal').classList.add('hidden'); changed();
+  toast('บันทึกการตั้งค่าแล้ว ⚙️');
 }
 function renderChart() {
   var ms = S.D.months, max = 0;
@@ -598,10 +788,10 @@ function renderBreakdown() {
 }
 function renderRecent() {
   var r = S.D.recent;
-  var sign = { income: '+', expense: '−', saving: '', invest: '' };
-  var short = { income: 'รายรับ', expense: 'รายจ่าย', saving: 'ออม', invest: 'ลงทุน' };
+  var sign = { income: '+', expense: '−', saving: '', invest: '', cardpay: '' };
+  var short = { income: 'รายรับ', expense: 'รายจ่าย', saving: 'ออม', invest: 'ลงทุน', cardpay: 'จ่ายบัตร' };
   $('recent').innerHTML = r.length ? r.map(function (x) {
-    var note = [x.note, x.account, x.isFixed ? 'Fix cost' : ''].filter(Boolean).join(' · ');
+    var note = [x.type === 'cardpay' ? '' : x.note, x.account, x.type === 'expense' ? payLabel(x.payWith) : '', x.isFixed ? 'Fix cost' : ''].filter(Boolean).join(' · ');
     return '<tr class="click" data-id="' + esc(x.id) + '"><td>' + thDate(x.date) + '</td><td><span class="kind ' + esc(x.type) + '">' + (short[x.type] || esc(x.type)) + '</span></td><td>' + esc(x.category) + '</td><td class="small">' + esc(note) + '</td><td class="right">' + (sign[x.type] || '') + baht(x.amount) + '</td><td class="ed">✏️</td></tr>';
   }).join('') : '<tr><td colspan="6" class="empty">เดือนนี้ยังไม่มีรายการ</td></tr>';
 }
@@ -619,13 +809,14 @@ function save() {
   var t = {
     id: uid(), type: S.tab, date: $('date').value || todayStr(), amount: amt, category: cat,
     account: (S.tab === 'saving' || S.tab === 'invest') ? $('account').value : '',
-    isFixed: S.tab === 'expense' && $('isFix').checked, note: $('note').value.trim(), created: Date.now()
+    isFixed: S.tab === 'expense' && $('isFix').checked, note: $('note').value.trim(), created: Date.now(),
+    payWith: S.tab === 'expense' ? S.pay : ''
   };
-  var p = { id: t.id, type: t.type, date: t.date, amount: t.amount, category: t.category, account: t.account, isFixed: t.isFixed, note: t.note };
+  var p = { id: t.id, type: t.type, date: t.date, amount: t.amount, category: t.category, account: t.account, isFixed: t.isFixed, note: t.note, payWith: t.payWith };
   S.raw.tx.push(t);
   if (t.isFixed) {
     var f = { id: uid(), name: t.note || t.category, category: t.category, amount: t.amount, cycle: $('cycle').value,
-      dueDay: Math.min(Math.max(parseInt($('dueDay').value, 10) || Number(t.date.slice(8, 10)), 1), 31), start: t.date, last: t.date };
+      dueDay: Math.min(Math.max(parseInt($('dueDay').value, 10) || Number(t.date.slice(8, 10)), 1), 31), start: t.date, last: t.date, payWith: t.payWith };
     S.raw.fixed.push(f);
     p.fixedId = f.id; p.cycle = f.cycle; p.dueDay = f.dueDay;
   }
@@ -637,8 +828,15 @@ function save() {
 }
 
 /* ---------- แก้ไข / ลบรายการ ---------- */
-function fillEditCats(type, current, account) {
-  var cats = activeCats(type);
+function fillEditCats(type, current, account, payWith) {
+  var cats = activeCats(type === 'cardpay' ? 'card' : type);
+  $('eCatLabel').textContent = type === 'cardpay' ? 'บัตร' : 'ประเภท';
+  $('ePayBox').classList.toggle('hidden', type !== 'expense');
+  if (type === 'expense') {
+    var cs = NONCARD.concat(cardNames()), cur = payWith || 'โอน';
+    if (cs.indexOf(cur) < 0) cs.push(cur);
+    $('ePay').innerHTML = cs.map(function (n) { return '<option value="' + esc(n) + '"' + (n === cur ? ' selected' : '') + '>' + esc(isCard(n) ? 'บัตร ' + n : n) + '</option>'; }).join('');
+  }
   if (current && cats.indexOf(current) < 0) cats = [current].concat(cats);
   $('eCat').innerHTML = cats.map(function (n) { return '<option' + (n === current ? ' selected' : '') + '>' + esc(n) + '</option>'; }).join('');
   var hasAcc = type === 'saving' || type === 'invest';
@@ -653,11 +851,12 @@ function fillEditCats(type, current, account) {
 function openEdit(id) {
   var t = findTx(id); if (!t) return;
   S.editId = id;
-  $('eType').innerHTML = ORDER.map(function (k) { return '<option value="' + k + '"' + (k === t.type ? ' selected' : '') + '>' + META[k].label + '</option>'; }).join('');
+  var types = t.type === 'cardpay' ? ['cardpay'] : ORDER;
+  $('eType').innerHTML = types.map(function (k) { return '<option value="' + k + '"' + (k === t.type ? ' selected' : '') + '>' + META[k].label + '</option>'; }).join('');
   $('eDate').value = t.date;
   $('eAmount').value = t.amount;
   $('eNote').value = t.note || '';
-  fillEditCats(t.type, t.category, t.account);
+  fillEditCats(t.type, t.category, t.account, t.payWith);
   resetDelete();
   $('editor').classList.remove('hidden');
 }
@@ -675,9 +874,10 @@ function saveEdit(e) {
   t.category = $('eCat').value;
   t.account = (t.type === 'saving' || t.type === 'invest') ? $('eAcc').value : '';
   t.note = $('eNote').value.trim();
+  t.payWith = t.type === 'expense' ? $('ePay').value : t.type === 'cardpay' ? t.category : '';
   if (t.type !== 'expense') t.isFixed = false;
   closeEdit(); changed();
-  send('updateTx', { id: t.id, type: t.type, date: t.date, amount: t.amount, category: t.category, account: t.account, note: t.note });
+  send('updateTx', { id: t.id, type: t.type, date: t.date, amount: t.amount, category: t.category, account: t.account, note: t.note, payWith: t.payWith });
   toast('แก้ไขแล้ว ✏️');
 }
 function deleteEdit() {
@@ -764,7 +964,19 @@ document.addEventListener('DOMContentLoaded', function () {
   $('fixList').addEventListener('click', function (e) { var b = e.target.closest('[data-fix]'); if (b) cancelFixed(b); });
   $('recent').addEventListener('click', function (e) { var tr = e.target.closest('tr[data-id]'); if (tr) openEdit(tr.dataset.id); });
   $('editForm').addEventListener('submit', saveEdit);
-  $('eType').addEventListener('change', function () { fillEditCats($('eType').value, '', ''); });
+  $('eType').addEventListener('change', function () { fillEditCats($('eType').value, '', '', ''); });
+  $('payChips').addEventListener('click', function (e) { var b = e.target.closest('[data-pay]'); if (!b) return; S.pay = b.dataset.pay; try { localStorage.setItem('mp_pay', S.pay); } catch (x) {} renderPay(); });
+  $('moneyCard').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-setup],[data-paycard]'); if (!b) return;
+    if (b.dataset.setup) openSetup(); else openPay(b.dataset.paycard);
+  });
+  $('payForm').addEventListener('submit', savePay);
+  $('pCancel').addEventListener('click', function () { $('payModal').classList.add('hidden'); });
+  $('setupForm').addEventListener('submit', saveSetup);
+  $('sCancel').addEventListener('click', function () { $('setupModal').classList.add('hidden'); });
+  $('sAddCard').addEventListener('click', addSetupCard);
+  $('sNewCard').addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); addSetupCard(); } });
+  ['payModal', 'setupModal'].forEach(function (id) { $(id).addEventListener('click', function (e) { if (e.target === $(id)) $(id).classList.add('hidden'); }); });
   $('eCancel').addEventListener('click', closeEdit);
   $('eDelete').addEventListener('click', deleteEdit);
   $('editor').addEventListener('click', function (e) { if (e.target === $('editor')) closeEdit(); });
